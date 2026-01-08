@@ -12,7 +12,7 @@ module sin_quadratic
 
     input  wire [46:0]  phase,     // PHASE_BITS = 47
 
-    output           valid_o,
+    output reg          valid_o,
     output reg  [55:0]  y_out       // Q4.52
 );
 
@@ -153,20 +153,9 @@ module sin_quadratic
 
 
     // -------------------------------------------------
-    // accumulate (stage 5)
+    // accumulate 
     // -------------------------------------------------
-    //reg signed [71:0] acc_r;
     wire [71:0] acc_r = term1 + (term2 >>> 1);
-
-    // always @(posedge clk or negedge resetn) begin
-    //     if (!resetn) begin
-    //         acc_r <= 0;
-    //     end else begin
-    //         acc_r <=  //(y0_s <<< FRAC_BITS)
-    //                  + term1
-    //                  + (term2 >>> 1);
-    //     end
-    // end
 
     // -------------------------------------------------
     // timing adjust of neg and valid
@@ -189,13 +178,13 @@ module sin_quadratic
     always @(posedge clk or negedge resetn) begin
         if (!resetn) begin
             y_out   <= {OUT_BITS{1'b0}};
+            valid_o <= 0;
         end else begin
-            y_out <= neg_r[3] ? -(acc_r >>> (FRAC_BITS - (OUT_Q - LUT_Q)))
-                                :  (acc_r >>> (FRAC_BITS - (OUT_Q - LUT_Q)));
+            valid_o <= valid_r[3];
+            y_out   <= neg_r  [3] ? -(acc_r >>> (FRAC_BITS - (OUT_Q - LUT_Q)))
+                                  :  (acc_r >>> (FRAC_BITS - (OUT_Q - LUT_Q)));
         end
     end
-
-    assign valid_o = valid_r[4];
 
 endmodule
 
