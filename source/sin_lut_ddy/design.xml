@@ -1,0 +1,243 @@
+<?xml version="1.0" ?>
+<ipxact:design xmlns:ipxact="http://www.accellera.org/XMLSchema/IPXACT/1685-2014" xmlns:lattice="http://www.latticesemi.com/lattice" xmlns:lsccip="http://www.latticesemi.com/XMLSchema/Radiant/ip">
+    <ipxact:vendor>latticesemi.com</ipxact:vendor>
+    <ipxact:library>module</ipxact:library>
+    <ipxact:name>sin_lut_ddy</ipxact:name>
+    <ipxact:version>2.5.0</ipxact:version>
+    <ipxact:componentInstances>
+        <ipxact:componentInstance>
+            <ipxact:instanceName>lscc_rom_inst</ipxact:instanceName>
+            <ipxact:componentRef library="module" name="rom" vendor="latticesemi.com" version="2.5.0">
+                <ipxact:configurableElementValues>
+                    <ipxact:configurableElementValue referenceId="FAMILY">LAV-AT</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="T_FAMILY">LAV-AT</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="MEM_ID">sin_lut_ddy</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="MEM_SIZE">36,1024</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RADDR_DEPTH">1024</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RDATA_WIDTH">36</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="Total Memory bits">36864</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RADDR_WIDTH">10</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="REGMODE">True</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="OUTPUT_CLK_EN">False</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="ECC_ENABLE">False</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RESETMODE">sync</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="user_init_mode">mem_file</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_MODE">mem_file</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="user_init_file">O:/src/Avant_lib/n2_lib/source/sincos_quadratic/sin_lut_ddy/misc/lut_ddy_sin_lut_ddy_copy.hex</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_FILE">O:/src/Avant_lib/n2_lib/source/sincos_quadratic/sin_lut_ddy/misc/lut_ddy_sin_lut_ddy_copy.hex</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_FILE_FORMAT">hex</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="buff_init_file">1</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_DATA_TYPE_IN">True</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_DATA_TYPE">True</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_00">0x7FDFF7FC2F7FDFF7FC6D7FDFF7FCAB7FDFF7FCE97FDFF7FD277FDFF7FD657FDFF7FDA37FDFF7FDE1</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_01">0x7FDFF7F83F7FDFF7F87D7FDFF7F8BB7FDFF7F8F97FDFF7F9377FDFF7F9757FDFF7F9B37FDFF7F9F1</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_02">0x7FDFF7F44F7FDFF7F48D7FDFF7F4CB7FDFF7F5097FDFF7F5477FDFF7F5857FDFF7F5C37FDFF7F801</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_03">0x7FDFF7F05F7FDFF7F09D7FDFF7F0DB7FDFF7F1197FDFF7F1577FDFF7F1957FDFF7F1D37FDFF7F411</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_04">0x7FDFF7EC707FDFF7ECAE7FDFF7ECEC7FDFF7ED2A7FDFF7ED687FDFF7EDA67FDFF7EDE37FDFF7F021</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_05">0x7FDFF7E8817FDFF7E8BF7FDFF7E8FD7FDFF7E93B7FDFF7E9787FDFF7E9B67FDFF7E9F47FDFF7EC32</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_06">0x7FDFF7E4927FDFF7E4D07FDFF7E50E7FDFF7E54C7FDFF7E58A7FDFF7E5C77FDFF7E8057FDFF7E843</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_07">0x7FDFF7E0A47FDFF7E0E27FDFF7E1207FDFF7E15E7FDFF7E19B7FDFF7E1D97FDFF7E4177FDFF7E455</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_08">0x7FDFF7DCB77FDFF7DCF57FDFF7DD327FDFF7DD707FDFF7DDAE7FDFF7DDEB7FDFF7E0297FDFF7E067</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_09">0x7FDFF7D8CA7FDFF7D9087FDFF7D9457FDFF7D9837FDFF7D9C17FDFF7D9FE7FDFF7DC3C7FDFF7DC79</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_0A">0x7FDFF7D4DE7FDFF7D51C7FDFF7D5597FDFF7D5977FDFF7D5D47FDFF7D8127FDFF7D84F7FDFF7D88D</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_0B">0x7FDFF7D0F37FDFF7D1307FDFF7D16E7FDFF7D1AB7FDFF7D1E87FDFF7D4267FDFF7D4637FDFF7D4A1</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_0C">0x7FDFF7CD097FDFF7CD467FDFF7CD837FDFF7CDC07FDFF7CDFE7FDFF7D03B7FDFF7D0787FDFF7D0B6</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_0D">0x7FDFF7C91F7FDFF7C95C7FDFF7C99A7FDFF7C9D77FDFF7CC147FDFF7CC517FDFF7CC8E7FDFF7CCCB</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_0E">0x7FDFF7C5377FDFF7C5747FDFF7C5B17FDFF7C5EE7FDFF7C82B7FDFF7C8687FDFF7C8A57FDFF7C8E2</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_0F">0x7FDFF7C1507FDFF7C18D7FDFF7C1C97FDFF7C4067FDFF7C4437FDFF7C4807FDFF7C4BD7FDFF7C4FA</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_10">0x7FDFF7BD6A7FDFF7BDA67FDFF7BDE37FDFF7C0207FDFF7C05D7FDFF7C0997FDFF7C0D67FDFF7C113</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_11">0x7FDFF7B9857FDFF7B9C17FDFF7B9FE7FDFF7BC3B7FDFF7BC777FDFF7BCB47FDFF7BCF07FDFF7BD2D</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_12">0x7FDFF7B5A17FDFF7B5DE7FDFF7B81A7FDFF7B8577FDFF7B8937FDFF7B8CF7FDFF7B90C7FDFF7B948</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_13">0x7FDFF7B1BF7FDFF7B1FC7FDFF7B4387FDFF7B4747FDFF7B4B07FDFF7B4ED7FDFF7B5297FDFF7B565</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_14">0x7FDFF7ADDF7FDFF7B01B7FDFF7B0577FDFF7B0937FDFF7B0CF7FDFF7B10B7FDFF7B1477FDFF7B183</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_15">0x7FDFF7AC007FDFF7AC3C7FDFF7AC777FDFF7ACB37FDFF7ACEF7FDFF7AD2B7FDFF7AD677FDFF7ADA3</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_16">0x7FDFF7A8227FDFF7A85E7FDFF7A89A7FDFF7A8D57FDFF7A9117FDFF7A94D7FDFF7A9887FDFF7A9C4</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_17">0x7FDFF7A4477FDFF7A4827FDFF7A4BD7FDFF7A4F97FDFF7A5347FDFF7A5707FDFF7A5AB7FDFF7A5E7</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_18">0x7FDFF7A06D7FDFF7A0A87FDFF7A0E37FDFF7A11E7FDFF7A1597FDFF7A1957FDFF7A1D07FDFF7A40B</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_19">0x7FDFF79C957FDFF79CCF7FDFF79D0A7FDFF79D457FDFF79D807FDFF79DBB7FDFF79DF67FDFF7A032</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_1A">0x7FDFF798BE7FDFF798F97FDFF799347FDFF7996E7FDFF799A97FDFF799E47FDFF79C1F7FDFF79C5A</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_1B">0x7FDFF794EA7FDFF795257FDFF7955F7FDFF795997FDFF795D47FDFF7980F7FDFF798497FDFF79884</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_1C">0x7FDFF791187FDFF791527FDFF7918C7FDFF791C77FDFF794017FDFF7943B7FDFF794757FDFF794B0</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_1D">0x7FDFF78D487FDFF78D827FDFF78DBC7FDFF78DF67FDFF790307FDFF7906A7FDFF790A47FDFF790DE</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_1E">0x7FDFF7897A7FDFF789B47FDFF789ED7FDFF78C277FDFF78C617FDFF78C9A7FDFF78CD47FDFF78D0E</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_1F">0x7FDFF785AE7FDFF785E87FDFF788217FDFF7885A7FDFF788947FDFF788CD7FDFF789077FDFF78940</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_20">0x7FDFF781E57FDFF7841E7FDFF784577FDFF784907FDFF784C97FDFF785037FDFF7853C7FDFF78575</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_21">0x7FDFF7801E7FDFF780577FDFF780907FDFF780C87FDFF781017FDFF7813A7FDFF781737FDFF781AC</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_22">0x7FDFF77C5A7FDFF77C927FDFF77CCB7FDFF77D037FDFF77D3C7FDFF77D747FDFF77DAD7FDFF77DE5</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_23">0x7FDFF778987FDFF778D07FDFF779087FDFF779407FDFF779787FDFF779B17FDFF779E97FDFF77C21</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_24">0x7FDFF774D87FDFF775107FDFF775487FDFF775807FDFF775B87FDFF775F07FDFF778287FDFF77860</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_25">0x7FDFF7711C7FDFF771537FDFF7718B7FDFF771C27FDFF771FA7FDFF774317FDFF774697FDFF774A1</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_26">0x7FDFF76D627FDFF76D997FDFF76DD07FDFF770077FDFF7703E7FDFF770767FDFF770AD7FDFF770E4</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_27">0x7FDFF769AB7FDFF769E17FDFF76C187FDFF76C4F7FDFF76C867FDFF76CBD7FDFF76CF47FDFF76D2B</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_28">0x7FDFF765F67FDFF7682D7FDFF768637FDFF7689A7FDFF768D07FDFF769077FDFF7693D7FDFF76974</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_29">0x7FDFF764457FDFF7647B7FDFF764B17FDFF764E77FDFF7651D7FDFF765547FDFF7658A7FDFF765C0</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_2A">0x7FDFF760977FDFF760CC7FDFF761027FDFF761387FDFF7616E7FDFF761A37FDFF761D97FDFF7640F</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_2B">0x7FDFF75CEC7FDFF75D217FDFF75D567FDFF75D8B7FDFF75DC17FDFF75DF67FDFF7602C7FDFF76061</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_2C">0x7FDFF759437FDFF759787FDFF759AD7FDFF759E27FDFF75C177FDFF75C4C7FDFF75C817FDFF75CB6</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_2D">0x7FDFF7559E7FDFF755D37FDFF758077FDFF7583C7FDFF758717FDFF758A57FDFF758DA7FDFF7590F</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_2E">0x7FDFF751FD7FDFF754317FDFF754657FDFF754997FDFF754CD7FDFF755017FDFF755367FDFF7556A</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_2F">0x7FDFF7505E7FDFF750927FDFF750C67FDFF750F97FDFF7512D7FDFF751617FDFF751957FDFF751C9</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_30">0x7FDFF74CC37FDFF74CF77FDFF74D2A7FDFF74D5D7FDFF74D907FDFF74DC47FDFF74DF77FDFF7502B</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_31">0x7FDFF7492C7FDFF7495F7FDFF749917FDFF749C47FDFF749F77FDFF74C2A7FDFF74C5D7FDFF74C90</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_32">0x7FDFF745987FDFF745CA7FDFF745FC7FDFF7482F7FDFF748617FDFF748947FDFF748C67FDFF748F9</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_33">0x7FDFF744077FDFF744397FDFF7446B7FDFF7449D7FDFF744CF7FDFF745017FDFF745337FDFF74565</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_34">0x7FDFF7407A7FDFF740AC7FDFF740DD7FDFF7410F7FDFF741407FDFF741727FDFF741A47FDFF741D5</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_35">0x7FDFF73CF17FDFF73D227FDFF73D537FDFF73D847FDFF73DB57FDFF73DE67FDFF740187FDFF74049</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_36">0x7FDFF7396C7FDFF7399C7FDFF739CD7FDFF739FD7FDFF73C2E7FDFF73C5F7FDFF73C8F7FDFF73CC0</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_37">0x7FDFF735EA7FDFF7381A7FDFF7384A7FDFF7387A7FDFF738AA7FDFF738DB7FDFF7390B7FDFF7393B</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_38">0x7FDFF7346C7FDFF7349C7FDFF734CB7FDFF734FB7FDFF7352B7FDFF7355A7FDFF7358A7FDFF735BA</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_39">0x7FDFF730F27FDFF731217FDFF731507FDFF731807FDFF731AF7FDFF731DE7FDFF7340D7FDFF7343D</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_3A">0x7FDFF72D7C7FDFF72DAB7FDFF72DDA7FDFF730087FDFF730377FDFF730667FDFF730957FDFF730C3</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_3B">0x7FDFF72C0B7FDFF72C397FDFF72C677FDFF72C957FDFF72CC37FDFF72CF17FDFF72D207FDFF72D4E</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_3C">0x7FDFF7289D7FDFF728CA7FDFF728F87FDFF729267FDFF729537FDFF729817FDFF729AF7FDFF729DD</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_3D">0x7FDFF725337FDFF725607FDFF7258D7FDFF725BA7FDFF725E77FDFF728157FDFF728427FDFF7286F</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_3E">0x7FDFF721CE7FDFF721FA7FDFF724277FDFF724537FDFF724807FDFF724AD7FDFF724D97FDFF72506</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_3F">0x7FDFF7206D7FDFF720987FDFF720C47FDFF720F07FDFF7211D7FDFF721497FDFF721757FDFF721A1</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_40">0x7FDFF71D107FDFF71D3B7FDFF71D667FDFF71D927FDFF71DBE7FDFF71DE97FDFF720157FDFF72041</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_41">0x7FDFF719B77FDFF719E27FDFF71C0D7FDFF71C387FDFF71C637FDFF71C8E7FDFF71CB97FDFF71CE4</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_42">0x7FDFF718637FDFF7188D7FDFF718B87FDFF718E27FDFF7190C7FDFF719377FDFF719627FDFF7198C</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_43">0x7FDFF715137FDFF7153D7FDFF715677FDFF715917FDFF715BB7FDFF715E47FDFF7180F7FDFF71839</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_44">0x7FDFF711C87FDFF711F17FDFF7141A7FDFF714447FDFF7146D7FDFF714967FDFF714C07FDFF714EA</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_45">0x7FDFF710817FDFF710AA7FDFF710D37FDFF710FB7FDFF711247FDFF7114D7FDFF711767FDFF7119F</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_46">0x7FDFF70D3F7FDFF70D677FDFF70D8F7FDFF70DB87FDFF70DE07FDFF710087FDFF710307FDFF71059</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_47">0x7FDFF70C027FDFF70C297FDFF70C517FDFF70C787FDFF70CA07FDFF70CC87FDFF70CF07FDFF70D17</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_48">0x7FDFF708C97FDFF708F07FDFF709177FDFF7093E7FDFF709657FDFF7098C7FDFF709B37FDFF709DB</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_49">0x7FDFF705957FDFF705BC7FDFF705E27FDFF708087FDFF7082F7FDFF708557FDFF7087C7FDFF708A3</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_4A">0x7FDFF704667FDFF7048C7FDFF704B27FDFF704D77FDFF704FD7FDFF705237FDFF705497FDFF7056F</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_4B">0x7FDFF7013C7FDFF701617FDFF701867FDFF701AB7FDFF701D17FDFF701F67FDFF7041B7FDFF70441</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_4C">0x7FDFF700177FDFF7003B7FDFF700607FDFF700847FDFF700A97FDFF700CE7FDFF700F27FDFF70117</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_4D">0x7FDFF6FCF67FDFF6FD1A7FDFF6FD3E7FDFF6FD627FDFF6FD867FDFF6FDAA7FDFF6FDCE7FDFF6FDF2</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_4E">0x7FDFF6F9DB7FDFF6F9FE7FDFF6FC217FDFF6FC457FDFF6FC687FDFF6FC8B7FDFF6FCAF7FDFF6FCD3</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_4F">0x7FDFF6F8C47FDFF6F8E77FDFF6F9097FDFF6F92C7FDFF6F94F7FDFF6F9727FDFF6F9957FDFF6F9B8</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_50">0x7FDFF6F5B37FDFF6F5D57FDFF6F5F77FDFF6F8197FDFF6F83B7FDFF6F85D7FDFF6F8807FDFF6F8A2</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_51">0x7FDFF6F4A77FDFF6F4C87FDFF6F4E97FDFF6F50B7FDFF6F52C7FDFF6F54E7FDFF6F56F7FDFF6F591</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_52">0x7FDFF6F19F7FDFF6F1C07FDFF6F1E17FDFF6F4027FDFF6F4227FDFF6F4437FDFF6F4647FDFF6F485</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_53">0x7FDFF6F09E7FDFF6F0BD7FDFF6F0DE7FDFF6F0FE7FDFF6F11E7FDFF6F13E7FDFF6F15E7FDFF6F17F</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_54">0x7FDFF6EDA17FDFF6EDC07FDFF6EDDF7FDFF6EDFF7FDFF6F01E7FDFF6F03E7FDFF6F05E7FDFF6F07E</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_55">0x7FDFF6ECA97FDFF6ECC87FDFF6ECE77FDFF6ED057FDFF6ED247FDFF6ED437FDFF6ED627FDFF6ED82</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_56">0x7FDFF6E9B77FDFF6E9D57FDFF6E9F37FDFF6EC117FDFF6EC2F7FDFF6EC4E7FDFF6EC6C7FDFF6EC8B</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_57">0x7FDFF6E8CA7FDFF6E8E77FDFF6E9057FDFF6E9227FDFF6E9407FDFF6E95E7FDFF6E97B7FDFF6E999</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_58">0x7FDFF6E5E37FDFF6E5FF7FDFF6E81C7FDFF6E8397FDFF6E8567FDFF6E8737FDFF6E8907FDFF6E8AD</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_59">0x7FDFF6E5017FDFF6E51D7FDFF6E5397FDFF6E5557FDFF6E5717FDFF6E58D7FDFF6E5AA7FDFF6E5C6</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_5A">0x7FDFF6E4247FDFF6E43F7FDFF6E45B7FDFF6E4767FDFF6E4927FDFF6E4AD7FDFF6E4C97FDFF6E4E5</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_5B">0x7FDFF6E14D7FDFF6E1677FDFF6E1827FDFF6E19D7FDFF6E1B87FDFF6E1D37FDFF6E1EE7FDFF6E409</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_5C">0x7FDFF6E07B7FDFF6E0957FDFF6E0AF7FDFF6E0C97FDFF6E0E37FDFF6E0FD7FDFF6E1187FDFF6E132</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_5D">0x7FDFF6DDAF7FDFF6DDC87FDFF6DDE17FDFF6DDFB7FDFF6E0147FDFF6E02E7FDFF6E0477FDFF6E061</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_5E">0x7FDFF6DCE87FDFF6DD017FDFF6DD197FDFF6DD327FDFF6DD4B7FDFF6DD647FDFF6DD7D7FDFF6DD96</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_5F">0x7FDFF6DC277FDFF6DC3F7FDFF6DC577FDFF6DC6F7FDFF6DC877FDFF6DC9F7FDFF6DCB77FDFF6DCD0</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_60">0x7FDFF6D96C7FDFF6D9837FDFF6D99A7FDFF6D9B17FDFF6D9C97FDFF6D9E07FDFF6D9F87FDFF6DC0F</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_61">0x7FDFF6D8B67FDFF6D8CD7FDFF6D8E37FDFF6D8FA7FDFF6D9107FDFF6D9277FDFF6D93E7FDFF6D955</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_62">0x7FDFF6D8067FDFF6D81C7FDFF6D8327FDFF6D8477FDFF6D85D7FDFF6D8737FDFF6D88A7FDFF6D8A0</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_63">0x7FDFF6D55C7FDFF6D5717FDFF6D5867FDFF6D59B7FDFF6D5B07FDFF6D5C57FDFF6D5DB7FDFF6D5F0</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_64">0x7FDFF6D4B77FDFF6D4CB7FDFF6D4E07FDFF6D4F47FDFF6D5097FDFF6D51D7FDFF6D5327FDFF6D547</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_65">0x7FDFF6D4187FDFF6D42C7FDFF6D43F7FDFF6D4537FDFF6D4677FDFF6D47B7FDFF6D48F7FDFF6D4A3</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_66">0x7FDFF6D17F7FDFF6D1927FDFF6D1A57FDFF6D1B87FDFF6D1CB7FDFF6D1DE7FDFF6D1F17FDFF6D405</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_67">0x7FDFF6D0EC7FDFF6D0FE7FDFF6D1107FDFF6D1227FDFF6D1357FDFF6D1477FDFF6D15A7FDFF6D16C</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_68">0x7FDFF6D05E7FDFF6D0707FDFF6D0817FDFF6D0937FDFF6D0A47FDFF6D0B67FDFF6D0C87FDFF6D0DA</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_69">0x7FDFF6CDD77FDFF6CDE77FDFF6CDF87FDFF6D0097FDFF6D01A7FDFF6D02B7FDFF6D03C7FDFF6D04D</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_6A">0x7FDFF6CD557FDFF6CD657FDFF6CD757FDFF6CD857FDFF6CD957FDFF6CDA57FDFF6CDB67FDFF6CDC6</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_6B">0x7FDFF6CCD97FDFF6CCE87FDFF6CCF87FDFF6CD077FDFF6CD167FDFF6CD267FDFF6CD367FDFF6CD45</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_6C">0x7FDFF6CC637FDFF6CC727FDFF6CC807FDFF6CC8F7FDFF6CC9D7FDFF6CCAC7FDFF6CCBB7FDFF6CCCA</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_6D">0x7FDFF6C9F37FDFF6CC017FDFF6CC0F7FDFF6CC1C7FDFF6CC2A7FDFF6CC387FDFF6CC477FDFF6CC55</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_6E">0x7FDFF6C9897FDFF6C9967FDFF6C9A37FDFF6C9B07FDFF6C9BD7FDFF6C9CB7FDFF6C9D87FDFF6C9E6</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_6F">0x7FDFF6C9257FDFF6C9317FDFF6C93D7FDFF6C94A7FDFF6C9567FDFF6C9637FDFF6C96F7FDFF6C97C</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_70">0x7FDFF6C8C77FDFF6C8D27FDFF6C8DE7FDFF6C8E97FDFF6C8F57FDFF6C9017FDFF6C90D7FDFF6C919</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_71">0x7FDFF6C86F7FDFF6C8797FDFF6C8847FDFF6C88F7FDFF6C89A7FDFF6C8A57FDFF6C8B07FDFF6C8BB</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_72">0x7FDFF6C81C7FDFF6C8267FDFF6C8307FDFF6C83B7FDFF6C8457FDFF6C84F7FDFF6C8597FDFF6C864</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_73">0x7FDFF6C5D07FDFF6C5D97FDFF6C5E37FDFF6C5EC7FDFF6C5F67FDFF6C5FF7FDFF6C8097FDFF6C813</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_74">0x7FDFF6C58A7FDFF6C5927FDFF6C59B7FDFF6C5A47FDFF6C5AC7FDFF6C5B57FDFF6C5BE7FDFF6C5C7</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_75">0x7FDFF6C54A7FDFF6C5527FDFF6C5597FDFF6C5617FDFF6C5697FDFF6C5717FDFF6C5797FDFF6C582</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_76">0x7FDFF6C5107FDFF6C5177FDFF6C51E7FDFF6C5257FDFF6C52C7FDFF6C5337FDFF6C53B7FDFF6C542</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_77">0x7FDFF6C4DC7FDFF6C4E27FDFF6C4E87FDFF6C4EF7FDFF6C4F57FDFF6C4FC7FDFF6C5027FDFF6C509</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_78">0x7FDFF6C4AE7FDFF6C4B37FDFF6C4B97FDFF6C4BE7FDFF6C4C47FDFF6C4CA7FDFF6C4D07FDFF6C4D6</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_79">0x7FDFF6C4867FDFF6C48B7FDFF6C48F7FDFF6C4947FDFF6C4997FDFF6C49E7FDFF6C4A37FDFF6C4A9</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_7A">0x7FDFF6C4647FDFF6C4687FDFF6C46C7FDFF6C4707FDFF6C4747FDFF6C4797FDFF6C47D7FDFF6C481</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_7B">0x7FDFF6C4487FDFF6C44B7FDFF6C44F7FDFF6C4527FDFF6C4557FDFF6C4597FDFF6C45D7FDFF6C460</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_7C">0x7FDFF6C4337FDFF6C4357FDFF6C4377FDFF6C43A7FDFF6C43D7FDFF6C43F7FDFF6C4427FDFF6C445</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_7D">0x7FDFF6C4237FDFF6C4257FDFF6C4267FDFF6C4287FDFF6C42A7FDFF6C42C7FDFF6C42E7FDFF6C430</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_7E">0x7FDFF6C41A7FDFF6C41A7FDFF6C41B7FDFF6C41C7FDFF6C41E7FDFF6C41F7FDFF6C4207FDFF6C422</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_VALUE_7F">0x7FDFF6C4167FDFF6C4167FDFF6C4167FDFF6C4177FDFF6C4177FDFF6C4187FDFF6C4187FDFF6C419</ipxact:configurableElementValue>
+                </ipxact:configurableElementValues>
+            </ipxact:componentRef>
+        </ipxact:componentInstance>
+    </ipxact:componentInstances>
+    <ipxact:adHocConnections>
+        <ipxact:adHocConnection>
+            <ipxact:name>sin_lut_ddy.rd_clk_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="sin_lut_ddy" portRef="rd_clk_i"/>
+                <ipxact:externalPortReference portRef="rd_clk_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>sin_lut_ddy.rst_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="sin_lut_ddy" portRef="rst_i"/>
+                <ipxact:externalPortReference portRef="rst_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>sin_lut_ddy.rd_en_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="sin_lut_ddy" portRef="rd_en_i"/>
+                <ipxact:externalPortReference portRef="rd_en_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>sin_lut_ddy.rd_clk_en_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="sin_lut_ddy" portRef="rd_clk_en_i"/>
+                <ipxact:externalPortReference portRef="rd_clk_en_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>sin_lut_ddy.rd_out_clk_en_i</ipxact:name>
+            <ipxact:tiedValue>1'b1</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="sin_lut_ddy" portRef="rd_out_clk_en_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>sin_lut_ddy.rd_addr_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="sin_lut_ddy" portRef="rd_addr_i"/>
+                <ipxact:externalPortReference portRef="rd_addr_i">
+                    <ipxact:partSelect>
+                        <ipxact:range>
+                            <ipxact:left>9</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:range>
+                    </ipxact:partSelect>
+                </ipxact:externalPortReference>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>sin_lut_ddy.rd_data_o</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="sin_lut_ddy" portRef="rd_data_o"/>
+                <ipxact:externalPortReference portRef="rd_data_o">
+                    <ipxact:partSelect>
+                        <ipxact:range>
+                            <ipxact:left>35</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:range>
+                    </ipxact:partSelect>
+                </ipxact:externalPortReference>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>sin_lut_ddy.one_err_det_o</ipxact:name>
+            <ipxact:tiedValue>open</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="sin_lut_ddy" portRef="one_err_det_o"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>sin_lut_ddy.two_err_det_o</ipxact:name>
+            <ipxact:tiedValue>open</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="sin_lut_ddy" portRef="two_err_det_o"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+    </ipxact:adHocConnections>
+</ipxact:design>

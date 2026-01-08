@@ -1,0 +1,13 @@
+<RadiantSimulationProject language="1" name="tb" path=".." simType="QuestaSim" stage="0" version="2.0">
+    <Source include="none" langstandard="Verilog 2001" path="../sim/tb_sin_quadratic.v" type="VERILOG" worklib="work"/>
+    <Source include="none" langstandard="Verilog 2001" path="../source/sin_quadratic.v" type="VERILOG" worklib="work"/>
+    <Source include="none" langstandard="Verilog 2001" path="../source/mult36x36p72_cascaded.v" type="VERILOG" worklib="work"/>
+    <Source include="none" langstandard="Verilog 2001" path="../source/sin_lut_y0/rtl/sin_lut_y0.v" type="VERILOG" worklib="work"/>
+    <Source include="none" langstandard="Verilog 2001" path="../source/sin_lut_dy/rtl/sin_lut_dy.v" type="VERILOG" worklib="work"/>
+    <Source include="none" langstandard="Verilog 2001" path="../source/sin_lut_ddy/rtl/sin_lut_ddy.v" type="VERILOG" worklib="work"/>
+    <SimLib value="pmi_work lav_ate"/>
+    <GlbInc value=""/>
+    <Macro value=""/>
+    <Udo value=""/>
+    <TopModule instance="" language="VERILOG" name="tb_sin_quadratic"/>
+</RadiantSimulationProject>

@@ -1,0 +1,22 @@
+set device "LN2-CT-20ES"
+set device_int "ak6a160b"
+set package "ASG410"
+set package_int "ASG410"
+set speed "1"
+set speed_int "1"
+set operation "Commercial"
+set family "LAV-AT"
+set architecture "ap6a00b"
+set partnumber ""
+set WRAPPER_INST "lscc_adder_inst"
+set D_WIDTH 55
+set SIGNED "on"
+set USE_CNUM 0
+set USE_CIN 0
+set USE_COUT 0
+set USE_OREG "off"
+set PIPELINES 0
+set FAMILY "LAV-AT"
+
+
+# Please refer to eval/constraint.pdc 
