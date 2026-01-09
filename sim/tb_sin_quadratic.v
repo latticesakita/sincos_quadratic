@@ -18,6 +18,21 @@ GSRA GSR_INST  (.GSR_N(1'b1));
     always #5 clk = ~clk;   // 100 MHz
     always @(posedge clk) if(!resetn) rst_cnt<=rst_cnt <<< 1;
 
+reg [31:0] randA;
+reg [31:0] randB;
+wire [63:0] rand = {randA, randB};
+
+always @(posedge clk or negedge resetn) begin
+	if(!resetn) begin
+		randA <= 0;
+		randB <= 0;
+	end
+	else begin
+		randA <= $random;
+		randB <= $random;
+	end
+end
+
     reg                  valid_i;
     reg [PHASE_BITS-1:0] phase;
     wire                 valid_o;
@@ -85,6 +100,7 @@ GSRA GSR_INST  (.GSR_N(1'b1));
           	cycle <= cycle + 1;
           	valid_i <= 1;
           	phase[PHASE_BITS-1: PHASE_BITS-TEST_BITS] <= phase[PHASE_BITS-1: PHASE_BITS-TEST_BITS] + 1;
+		phase[PHASE_BITS-TEST_BITS-1 : 0] = rand[PHASE_BITS-TEST_BITS-1 : 0];
         	if (valid_o) begin
         	    $fwrite(fd, "%0d,%h,%h\n", fifo_idx[fifo_raddr], fifo_phase[fifo_raddr] , y_out);
         	end

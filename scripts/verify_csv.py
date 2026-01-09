@@ -7,7 +7,7 @@ import math
 PHASE_BITS = 47
 
 OUT_BITS  = 56
-OUT_Q     = 52
+OUT_Q     = 54
 OUT_SCALE = 1 << OUT_Q
 
 # -------------------------------------------------

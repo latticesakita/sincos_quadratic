@@ -13,7 +13,7 @@ module sin_quadratic
     input  wire [46:0]  phase,     // PHASE_BITS = 47
 
     output reg          valid_o,
-    output reg  [55:0]  y_out       // Q4.52
+    output reg  [55:0]  y_out       // Q2.54
 );
 
     // -------------------------------------------------
@@ -28,7 +28,7 @@ module sin_quadratic
     localparam LUT_Q     = 34;
 
     localparam OUT_BITS  = 56;
-    localparam OUT_Q     = 52;
+    localparam OUT_Q     = 54;
 
     // -------------------------------------------------
     // phase decode (combinational)
@@ -43,7 +43,7 @@ module sin_quadratic
     // -------------------------------------------------
     wire [LUT_BITS-1:0] y0_r, dy_r, ddy_r;
 
-    sin_lut_y0 u0 (
+    sin_lut_y0 lut_y0 (
         .rst_i	(~resetn),
         .rd_clk_i    (clk),
         .rd_clk_en_i (1'b1),
@@ -52,7 +52,7 @@ module sin_quadratic
         .rd_data_o   (y0_r)
     );
 
-    sin_lut_dy u1 (
+    sin_lut_dy lut_dy (
         .rst_i	(~resetn),
         .rd_clk_i    (clk),
         .rd_clk_en_i (1'b1),
@@ -61,7 +61,7 @@ module sin_quadratic
         .rd_data_o   (dy_r)
     );
 
-    sin_lut_ddy u2 (
+    sin_lut_ddy lut_ddy (
         .rst_i	(~resetn),
         .rd_clk_i    (clk),
         .rd_clk_en_i (1'b1),
@@ -156,6 +156,7 @@ module sin_quadratic
     // accumulate 
     // -------------------------------------------------
     wire [71:0] acc_r = term1 + (term2 >>> 1);
+    //wire [71:0] acc_shifted = (acc_r >>> (FRAC_BITS - (OUT_Q - LUT_Q)));
 
     // -------------------------------------------------
     // timing adjust of neg and valid
