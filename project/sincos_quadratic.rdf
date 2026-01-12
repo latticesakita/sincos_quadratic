@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<RadiantProject version="4.2" radiant="2025.2.0.48.0" title="sincos_quadratic" device="LAV-AT-E30-1CBG484C" performance_grade="1" family_int="ap6a00b" device_int="ap6a160cee" package_int="CBG484" operation_int="COM" speed_int="1" default_implementation="impl_1">
+<RadiantProject version="4.2" radiant="2025.2.0.48.0" title="sincos_quadratic" device="LFCPNX-100-7CBG256C" performance_grade="7_High-Performance_1.0V" family_int="jd5d00" device_int="jd5d80" package_int="CBG256" operation_int="COM" speed_int="10" default_implementation="impl_1">
     <Options/>
     <Implementation title="impl_1" dir="impl_1" description="impl_1" synthesis="synplify" default_strategy="Strategy1">
         <Options def_top="top_sincos_quadratic" hdl_sort="off" top="top_sincos_quadratic"/>
@@ -15,9 +15,6 @@
         <Source name="../source/sin_quadratic.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
-        <Source name="../source/mult36x36p72_cascaded.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
         <Source name="../source/sin_lut_y0/sin_lut_y0.ipx" type="IPX_Module" type_short="IPX">
             <Options/>
         </Source>
@@ -30,13 +27,7 @@
         <Source name="../sim/gpll/gpll.ipx" type="IPX_Module" type_short="IPX">
             <Options/>
         </Source>
-        <Source name="../source/mult36x36p72.v" type="Verilog" type_short="Verilog" excluded="TRUE">
-            <Options/>
-        </Source>
-        <Source name="../source/addr38/addr38.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
-            <Options/>
-        </Source>
-        <Source name="../source/addr55/addr55.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
+        <Source name="../source/mult36x36p72.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
         <Source name="sincos_quadratic.pdc" type="Physical Constraints File" type_short="PDC">

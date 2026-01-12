@@ -1,258 +1,1049 @@
-`ifndef __TESTBENCH__TB_TOP__
-`define __TESTBENCH__TB_TOP__
+// =============================================================================
+// >>>>>>>>>>>>>>>>>>>>>>>>> COPYRIGHT NOTICE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// -----------------------------------------------------------------------------
+// Copyright (c) 2018 by Lattice Semiconductor Corporation
+// ALL RIGHTS RESERVED
+// --------------------------------------------------------------------
+//
+// Permission:
+//
+// Lattice SG Pte. Ltd. grants permission to use this code
+// pursuant to the terms of the Lattice Reference Design License Agreement.
+//
+//
+// Disclaimer:
+//
+// This VHDL or Verilog source code is intended as a design reference
+// which illustrates how these types of functions can be implemented.
+// It is the user's responsibility to verify their design for
+// consistency and functionality through the use of formal
+// verification methods. Lattice provides no warranty
+// regarding the use or functionality of this code.
+//
+// -----------------------------------------------------------------------------
+//
+//                     Lattice SG Pte. Ltd.
+//                     101 Thomson Road, United Square #07-02
+//                     Singapore 307591
+//
+//
+//                     TEL: 1-800-Lattice (USA and Canada)
+//                     +65-6631-2000 (Singapore)
+//                     +1-503-268-8001 (other locations)
+//
+//                     web: http://www.latticesemi.com/
+//                     email: techsupport@latticesemi.com
+//
+// -----------------------------------------------------------------------------
+//
+// =============================================================================
+// FILE DETAILS
+// Project : <>
+// File : tb_top.v
+// Title :
+// Dependencies :
+// Description :
+// =============================================================================
+// REVISION HISTORY
+// Version : 1.0
+// Author(s) :
+// Mod. Date :    02.13.2019
+// Changes Made : Initial version
+// -----------------------------------------------------------------------------
+// Version : 1.0
+// Author(s) :
+// Mod. Date :
+// Changes Made :
+// =============================================================================
+
+
+`ifndef __TB_TOP__
+`define __TB_TOP__
+
 `timescale 1ps/100fs
-//==========================================================================
-// Module : tb_top
-//==========================================================================
-module tb_top ();
 
+module tb_top();
 
-
-//--------------------------------------------------------------------------
-//--- Local Parameters/Defines ---
-//--------------------------------------------------------------------------
 `include "dut_params.v"
 
-localparam                    REFCLK_PERIOD = 1000000/REFCLK_FREQ;
+parameter  CLK_IN_PERIOD = 1000000/(2*CLKI_FREQ);
+reg        clki_i;
+reg        rstn_i;
+reg        lmmi_clk_i, lmmi_resetn_i, lmmi_request_i, lmmi_wr_rdn_i;
+reg  [6:0] lmmi_offset_i;
+reg  [7:0] lmmi_wdata_i;
+wire [7:0] lmmi_rdata_o;
+wire       lmmi_rdata_valid_o, lmmi_ready_o;
+wire       lock_o;
+wire       clkop_o, clkos_o, clkos2_o, clkos3_o, clkos4_o, clkos5_o;
+reg error_flag_w;
+reg error_flag_w2;
+reg error_flag_w3;
+reg error_flag_w4;
+reg error_flag_w5;
+reg error_flag_w6;
+integer    i;
+realtime phase_fbk_time = 0;
+reg enclkop_i;
+reg enclkos_i;
+reg enclkos2_i;
+reg enclkos3_i;
+reg enclkos4_i;
+reg enclkos5_i;
+// local variables for clkop
+real clk_freq_clkop;          // clk freq (measured)
+localparam exp_clk_freq_clkop = (CLKOP_BYPASS == 0)? CLKOP_FREQ_ACTUAL : CLKI_FREQ;    // expected clk freq (calculated from equation)
+realtime time_phase_clkop = 0;      // expected phase time
+real phase_shift_actual_clkop;
+wire done_r;
+wire dyn_p_start_r;
+wire dyn_s_start_r;
+wire dyn_s2_start_r;
+wire dyn_s3_start_r;
+wire dyn_s4_start_r;
+wire dyn_s5_start_r;
+wire dyn_p_end_r;
+reg lock_done;
+reg dyn_p_done;
+reg dyn_s_done;
+reg dyn_s2_done;
+reg dyn_s3_done;
+reg dyn_s4_done;
+reg dyn_s5_done;
 
-localparam                    CLK0_DIV      = (PLL_CLKOD0+1);
-localparam                    CLK1_DIV      = (PLL_CLKOD1+1);
-localparam                    CLK2_DIV      = (PLL_CLKOD2+1);
-localparam                    CLK3_DIV      = (PLL_CLKOD3+1);
-localparam                    CLK4_DIV      = (PLL_CLKOD4+1);
-localparam                    CLK5_DIV      = (PLL_CLKOD5+1);
-localparam                    CLK6_DIV      = (PLL_CLKOD6+1);
-localparam                    CLK7_DIV      = (PLL_CLKOD7+1);
-
-localparam                    CLK0_FREQ     = VCO_FREQ/CLK0_DIV;
-localparam                    CLK1_FREQ     = VCO_FREQ/CLK1_DIV;
-localparam                    CLK2_FREQ     = VCO_FREQ/CLK2_DIV;
-localparam                    CLK3_FREQ     = VCO_FREQ/CLK3_DIV;
-localparam                    CLK4_FREQ     = VCO_FREQ/CLK4_DIV;
-localparam                    CLK5_FREQ     = VCO_FREQ/CLK5_DIV;
-localparam                    CLK6_FREQ     = VCO_FREQ/CLK6_DIV;
-localparam                    CLK7_FREQ     = VCO_FREQ/CLK7_DIV;
-
-localparam                    CLK0_PHASE    = (EN_EXT_CLKDIV)? ((45*CLK0_PHI/CLK0_DIV) + (360*(CLK0_DEL - CLK0_DIV)/CLK0_DIV)) : 0;
-localparam                    CLK1_PHASE    = (EN_EXT_CLKDIV)? ((45*CLK1_PHI/CLK1_DIV) + (360*(CLK1_DEL - CLK1_DIV)/CLK1_DIV)) : 0;
-localparam                    CLK2_PHASE    = (EN_EXT_CLKDIV)? ((45*CLK2_PHI/CLK2_DIV) + (360*(CLK2_DEL - CLK2_DIV)/CLK2_DIV)) : 0;
-localparam                    CLK3_PHASE    = (EN_EXT_CLKDIV)? ((45*CLK3_PHI/CLK3_DIV) + (360*(CLK3_DEL - CLK3_DIV)/CLK3_DIV)) : 0;
-localparam                    CLK4_PHASE    = (EN_EXT_CLKDIV)? ((45*CLK4_PHI/CLK4_DIV) + (360*(CLK4_DEL - CLK4_DIV)/CLK4_DIV)) : 0;
-localparam                    CLK5_PHASE    = (EN_EXT_CLKDIV)? ((45*CLK5_PHI/CLK5_DIV) + (360*(CLK5_DEL - CLK5_DIV)/CLK5_DIV)) : 0;
-localparam                    CLK6_PHASE    = (EN_EXT_CLKDIV)? ((45*CLK6_PHI/CLK6_DIV) + (360*(CLK6_DEL - CLK6_DIV)/CLK6_DIV)) : 0;
-localparam                    CLK7_PHASE    = (EN_EXT_CLKDIV)? ((45*CLK7_PHI/CLK7_DIV) + (360*(CLK7_DEL - CLK7_DIV)/CLK7_DIV)) : 0;
-
-localparam                    EN_PHASE_CHECK_CLK0 = (CLK0_BYP)? 0 :
-                                                    (CLK0_FREQ == CLK1_FREQ)? (CLK1_PHASE == 0) :
-                                                    (CLK0_FREQ == CLK2_FREQ)? (CLK2_PHASE == 0) :
-                                                    (CLK0_FREQ == CLK3_FREQ)? (CLK3_PHASE == 0) :
-                                                    (CLK0_FREQ == CLK4_FREQ)? (CLK4_PHASE == 0) :
-                                                    (CLK0_FREQ == CLK5_FREQ)? (CLK5_PHASE == 0) :
-                                                    (CLK0_FREQ == CLK6_FREQ)? (CLK6_PHASE == 0) :
-                                                    (CLK0_FREQ == CLK7_FREQ)? (CLK7_PHASE == 0) : 0;
-
-localparam                    EN_PHASE_CHECK_CLK1 = (CLK1_BYP)? 0 :
-                                                    (CLK1_FREQ == CLK2_FREQ)? (CLK2_PHASE == 0) :
-                                                    (CLK1_FREQ == CLK3_FREQ)? (CLK3_PHASE == 0) :
-                                                    (CLK1_FREQ == CLK4_FREQ)? (CLK4_PHASE == 0) :
-                                                    (CLK1_FREQ == CLK5_FREQ)? (CLK5_PHASE == 0) :
-                                                    (CLK1_FREQ == CLK6_FREQ)? (CLK6_PHASE == 0) :
-                                                    (CLK1_FREQ == CLK7_FREQ)? (CLK7_PHASE == 0) :
-                                                    (CLK1_FREQ == CLK0_FREQ)? (CLK0_PHASE == 0) : 0;
-
-localparam                    EN_PHASE_CHECK_CLK2 = (CLK2_BYP)? 0 :
-                                                    (CLK2_FREQ == CLK3_FREQ)? (CLK3_PHASE == 0) :
-                                                    (CLK2_FREQ == CLK4_FREQ)? (CLK4_PHASE == 0) :
-                                                    (CLK2_FREQ == CLK5_FREQ)? (CLK5_PHASE == 0) :
-                                                    (CLK2_FREQ == CLK6_FREQ)? (CLK6_PHASE == 0) :
-                                                    (CLK2_FREQ == CLK7_FREQ)? (CLK7_PHASE == 0) :
-                                                    (CLK2_FREQ == CLK0_FREQ)? (CLK0_PHASE == 0) :
-                                                    (CLK2_FREQ == CLK1_FREQ)? (CLK1_PHASE == 0) : 0;
-
-localparam                    EN_PHASE_CHECK_CLK3 = (CLK3_BYP)? 0 :
-                                                    (CLK3_FREQ == CLK4_FREQ)? (CLK4_PHASE == 0) :
-                                                    (CLK3_FREQ == CLK5_FREQ)? (CLK5_PHASE == 0) :
-                                                    (CLK3_FREQ == CLK6_FREQ)? (CLK6_PHASE == 0) :
-                                                    (CLK3_FREQ == CLK7_FREQ)? (CLK7_PHASE == 0) :
-                                                    (CLK3_FREQ == CLK0_FREQ)? (CLK0_PHASE == 0) :
-                                                    (CLK3_FREQ == CLK1_FREQ)? (CLK1_PHASE == 0) :
-                                                    (CLK3_FREQ == CLK2_FREQ)? (CLK2_PHASE == 0) : 0;
-
-localparam                    EN_PHASE_CHECK_CLK4 = (CLK4_BYP)? 0 :
-                                                    (CLK4_FREQ == CLK5_FREQ)? (CLK5_PHASE == 0) :
-                                                    (CLK4_FREQ == CLK6_FREQ)? (CLK6_PHASE == 0) :
-                                                    (CLK4_FREQ == CLK7_FREQ)? (CLK7_PHASE == 0) :
-                                                    (CLK4_FREQ == CLK0_FREQ)? (CLK0_PHASE == 0) :
-                                                    (CLK4_FREQ == CLK1_FREQ)? (CLK1_PHASE == 0) :
-                                                    (CLK4_FREQ == CLK2_FREQ)? (CLK2_PHASE == 0) :
-                                                    (CLK4_FREQ == CLK3_FREQ)? (CLK3_PHASE == 0) : 0;
-
-localparam                    EN_PHASE_CHECK_CLK5 = (CLK5_BYP)? 0 :
-                                                    (CLK5_FREQ == CLK6_FREQ)? (CLK6_PHASE == 0) :
-                                                    (CLK5_FREQ == CLK7_FREQ)? (CLK7_PHASE == 0) :
-                                                    (CLK5_FREQ == CLK0_FREQ)? (CLK0_PHASE == 0) :
-                                                    (CLK5_FREQ == CLK1_FREQ)? (CLK1_PHASE == 0) :
-                                                    (CLK5_FREQ == CLK2_FREQ)? (CLK2_PHASE == 0) :
-                                                    (CLK5_FREQ == CLK3_FREQ)? (CLK3_PHASE == 0) :
-                                                    (CLK5_FREQ == CLK4_FREQ)? (CLK4_PHASE == 0) : 0;
-
-localparam                    EN_PHASE_CHECK_CLK6 = (CLK6_BYP)? 0 :
-                                                    (CLK6_FREQ == CLK7_FREQ)? (CLK7_PHASE == 0) :
-                                                    (CLK6_FREQ == CLK0_FREQ)? (CLK0_PHASE == 0) :
-                                                    (CLK6_FREQ == CLK1_FREQ)? (CLK1_PHASE == 0) :
-                                                    (CLK6_FREQ == CLK2_FREQ)? (CLK2_PHASE == 0) :
-                                                    (CLK6_FREQ == CLK3_FREQ)? (CLK3_PHASE == 0) :
-                                                    (CLK6_FREQ == CLK4_FREQ)? (CLK4_PHASE == 0) :
-                                                    (CLK6_FREQ == CLK5_FREQ)? (CLK5_PHASE == 0) : 0;
-
-localparam                    EN_PHASE_CHECK_CLK7 = (CLK7_BYP)? 0 :
-                                                    (CLK7_FREQ == CLK0_FREQ)? (CLK0_PHASE == 0) :
-                                                    (CLK7_FREQ == CLK1_FREQ)? (CLK1_PHASE == 0) :
-                                                    (CLK7_FREQ == CLK2_FREQ)? (CLK2_PHASE == 0) :
-                                                    (CLK7_FREQ == CLK3_FREQ)? (CLK3_PHASE == 0) :
-                                                    (CLK7_FREQ == CLK4_FREQ)? (CLK4_PHASE == 0) :
-                                                    (CLK7_FREQ == CLK5_FREQ)? (CLK5_PHASE == 0) :
-                                                    (CLK7_FREQ == CLK6_FREQ)? (CLK6_PHASE == 0) : 0;
-
-localparam                    LOCK_TIMEOUT_CNT    = 100000;
-
-//--------------------------------------------------------------------------
-//--- Combinational Wire/Reg ---
-//--------------------------------------------------------------------------
-reg                           param_mismatch;
-reg         [31:0]            lock_timer;
-reg                           reset_done;
-reg                           exp_lock;
-
-reg                           refclk_in_i;
-reg                           rst_n_i;
-wire                          usr_fbkclk_i;
-
-reg                           clken_clkop_i;
-reg                           clken_clkophy_i;
-reg                           clken_clkos2_i;
-reg                           clken_clkos3_i;
-reg                           clken_clkos4_i;
-reg                           clken_clkos5_i;
-reg                           clken_clkos_i;
-reg                           clken_testclk_i;
-
-reg                           phasedir_i;
-reg                           phaseloadreg_i;
-reg         [2:0]             phasesel_i;
-reg                           phasestep_i;
-/*AUTOREGINPUT*/
-reg         [6:0]             apb_paddr_i;
-reg                           apb_pclk_i;
-reg                           apb_penable_i;
-reg                           apb_preset_n_i;
-reg                           apb_psel_i;
-reg         [15:0]            apb_pwdata_i;
-reg                           apb_pwrite_i;
-reg                           lmmi_clk_i;
-reg         [4:0]             lmmi_offset_i;
-reg                           lmmi_request_i;
-reg                           lmmi_resetn_i;
-reg         [15:0]            lmmi_wdata_i;
-reg                           lmmi_wr_rdn_i;
-
-wire                          pll_lock_o;
-wire                          pll_lock_w;
-wire                          refclk_out_o;
-wire                          clkout_clkop_o;
-wire                          clkout_clkophy_o;
-wire                          clkout_clkos2_o;
-wire                          clkout_clkos3_o;
-wire                          clkout_clkos4_o;
-wire                          clkout_clkos5_o;
-wire                          clkout_clkos_o;
-wire                          clkout_testclk_o;
-wire                          div_change_fbkclk_o;
-wire                          div_change_refclk_o;
-wire                          outresetack_clkop_o;
-wire                          outresetack_clkophy_o;
-wire                          outresetack_clkos2_o;
-wire                          outresetack_clkos3_o;
-wire                          outresetack_clkos4_o;
-wire                          outresetack_clkos5_o;
-wire                          outresetack_clkos_o;
-wire                          outresetack_testclk_o;
-wire                          slip_fbkclk_o;
-wire                          slip_refclk_o;
-wire                          stepack_clkop_o;
-wire                          stepack_clkophy_o;
-wire                          stepack_clkos2_o;
-wire                          stepack_clkos3_o;
-wire                          stepack_clkos4_o;
-wire                          stepack_clkos5_o;
-wire                          stepack_clkos_o;
-wire                          stepack_testclk_o;
-/*AUTOWIRE*/
-wire        [15:0]            apb_prdata_o;
-wire                          apb_pready_o;
-wire                          apb_pslverr_o;
-wire        [15:0]            lmmi_rdata_o;
-wire                          lmmi_rdata_valid_o;
-wire                          lmmi_ready_o;
-
-wire                          test_done;
-
-wire        [7:0]             clk_out;
-wire        [7:0]             clk_error_detected;
-wire        [7:0]             clk_test_done;
-wire        [7:0]             clk_toggle_detected;
-
-real                          clk_phase[7:0];
-real                          clk_freq[7:0];
+reg error_flag_lock;
 
 
-// -----------------------------------------
-// port names on generated wrapper
-// -----------------------------------------
-wire                          clki_i     ;
-wire                          rstn_i     ;
-wire                          enclkop_i  ;
-wire                          enclkos_i  ;
-wire                          enclkos2_i ;
-wire                          enclkos3_i ;
-wire                          enclkos4_i ;
-wire                          enclkos5_i ;
-wire                          enclkophy_i;
-wire                          clkop_o    ;
-wire                          clkos_o    ;
-wire                          clkos2_o   ;
-wire                          clkos3_o   ;
-wire                          clkos4_o   ;
-wire                          clkos5_o   ;
-wire                          clkophy_o  ;
-wire                          lock_o     ;
+realtime trim_rise_fbk = 0;
+realtime trim_fall_fbk = 0;
 
-assign clki_i      = refclk_in_i;
-assign rstn_i      = rst_n_i;
-assign enclkop_i   = clken_clkop_i  ;
-assign enclkos_i   = clken_clkos_i  ;
-assign enclkos2_i  = clken_clkos2_i ;
-assign enclkos3_i  = clken_clkos3_i ;
-assign enclkos4_i  = clken_clkos4_i ;
-assign enclkos5_i  = clken_clkos5_i ;
-assign enclkophy_i = clken_clkophy_i;
+reg            phasedir_i;
+reg            phasestep_i;
+reg            phaseloadreg_i;
+reg      [2:0] phasesel_i;
 
-assign clkout_clkop_o   = clkop_o   ;
-assign clkout_clkos_o   = clkos_o   ;
-assign clkout_clkos2_o  = clkos2_o  ;
-assign clkout_clkos3_o  = clkos3_o  ;
-assign clkout_clkos4_o  = clkos4_o  ;
-assign clkout_clkos5_o  = clkos5_o  ;
-assign clkout_clkophy_o = clkophy_o ;
-assign pll_lock_o       = lock_o    ;
-//--------------------------------------------------------------------------
-//--- Registers ---
-//--------------------------------------------------------------------------
+reg    pllpd_en_n_i;
+reg    legacy_i;
+
+reg  refdetreset;
+wire refdetlos;
+
+reg first_sample_trim_clkop;
+reg first_sample_trim_clkos;
+
+// local variables for clkos
+realtime prev_time_clkos = 0;     // store previous clk posedge
+realtime curr_time_clkos = 0;     // store current clk posedge
+real clk_freq_clkos;          // clk freq (measured)
+localparam exp_clk_freq_clkos = (CLKOS_BYPASS == 0)? CLKOS_FREQ_ACTUAL : CLKI_FREQ;      // expected clk freq (calculated from equation)
+realtime time_phase_clkos = 0;      // expected phase time
+real phase_shift_actual_clkos;
+
+reg error_flag_pdn;
+
+reg error_flag_reset;
+reg reset_done;
+
+
+///trim
+reg error_trim_rise_p;
+reg error_trim_rise_s;
+reg error_trim_fall_p;
+reg error_trim_fall_s;
+
+realtime edge_trim_rise_clkop= 0;      // expected phase time
+realtime edge_trim_rise_clkos= 0;
+real time_trim_rise_clkop;
+real time_trim_rise_clkos;
+
+realtime edge_trim_fall_clkop= 0;      // expected phase time
+realtime edge_trim_fall_clkos= 0;
+real time_trim_fall_clkop;
+real time_trim_fall_clkos;
+
+reg error_dyn_phase_p;
+reg error_dyn_phase_s;
+reg error_dyn_phase_s2;
+reg error_dyn_phase_s3;
+reg error_dyn_phase_s4;
+reg error_dyn_phase_s5;
+
+
+// local variables for clkos2
+realtime prev_time_clkos2 = 0;     // store previous clk posedge
+realtime curr_time_clkos2 = 0;     // store current clk posedge
+real clk_freq_clkos2;          // clk freq (measured)
+localparam exp_clk_freq_clkos2 = (CLKOS2_BYPASS == 0)? CLKOS2_FREQ_ACTUAL : CLKI_FREQ;       // expected clk freq (calculated from equation)
+realtime time_phase_clkos2 = 0;      // expected phase realtime
+real phase_shift_actual_clkos2;
+
+
+// local variables for clkos3
+realtime prev_time_clkos3 = 0;     // store previous clk posedge
+realtime curr_time_clkos3 = 0;     // store current clk posedge
+real clk_freq_clkos3;          // clk freq (measured)
+localparam exp_clk_freq_clkos3 = (CLKOS3_BYPASS == 0)? CLKOS3_FREQ_ACTUAL : CLKI_FREQ;      // expected clk freq (calculated from equation)
+realtime time_phase_clkos3 = 0;      // expected phase time
+real phase_shift_actual_clkos3;
+
+    // local variables for clkos4
+realtime prev_time_clkos4 = 0;     // store previous clk posedge
+realtime curr_time_clkos4 = 0;     // store current clk posedge
+real clk_freq_clkos4;          // clk freq (measured)
+localparam exp_clk_freq_clkos4 = (CLKOS4_BYPASS == 0)? CLKOS4_FREQ_ACTUAL : CLKI_FREQ;       // expected clk freq (calculated from equation)
+realtime time_phase_clkos4 = 0;      // expected phase time
+real phase_shift_actual_clkos4;
+
+reg powerdown_done;
+
+
+    // local variables for clkos5
+realtime prev_time_clkos5 = 0;     // store previous clk posedge
+realtime curr_time_clkos5 = 0;     // store current clk posedge
+real clk_freq_clkos5;          // clk freq (measured)
+localparam exp_clk_freq_clkos5 = (CLKOS5_BYPASS == 0)? CLKOS5_FREQ_ACTUAL : CLKI_FREQ;      // expected clk freq (calculated from equation)
+realtime time_phase_clkos5 = 0;      // expected phase time
+real phase_shift_actual_clkos5;
+
+real  phase_shift_expected_clkop = CLKOP_PHASE_ACTUAL;
+real  phase_shift_expected_clkos = CLKOS_PHASE_ACTUAL;
+real  phase_shift_expected_clkos2 = CLKOS2_PHASE_ACTUAL;
+real  phase_shift_expected_clkos3 = CLKOS3_PHASE_ACTUAL;
+real  phase_shift_expected_clkos4 = CLKOS4_PHASE_ACTUAL;
+real  phase_shift_expected_clkos5 = CLKOS5_PHASE_ACTUAL;
+
+
+wire   apb_pclk_i;
+wire   apb_preset_n_i;
+reg    apb_penable_i;
+reg    apb_psel_i ;
+reg    apb_pwrite_i ;
+reg    [31:0] apb_paddr_i;
+reg    [31:0] apb_pwdata_i;
+wire   [31:0] apb_prdata_o;
+wire          apb_pready_o;
+
+reg  [31:0]  clkop_trim_cnt_rise;
+reg  [31:0]  clkos_trim_cnt_rise;
+reg  [31:0]  clkop_trim_cnt_fall;
+reg  [31:0]  clkos_trim_cnt_fall;
+reg   clkop_trim_rise_test_done ;
+reg   clkos_trim_rise_test_done ;
+reg   clkop_trim_fall_test_done ;
+reg   clkos_trim_fall_test_done ;
+
+wire clkop_error_detected  ;
+wire clkos_error_detected  ;
+wire clkos2_error_detected ;
+wire clkos3_error_detected ;
+wire clkos4_error_detected ;
+wire clkos5_error_detected ;
+wire clkop_test_done  ;
+wire clkos_test_done  ;
+wire clkos2_test_done ;
+wire clkos3_test_done ;
+wire clkos4_test_done ;
+wire clkos5_test_done ;
+
+localparam fbk_freq = (FBK_MODE == "CLKOP" || FBK_MODE == "INTCLKOP")? exp_clk_freq_clkop:
+                          (FBK_MODE == "CLKOS" || FBK_MODE == "INTCLKOS")? exp_clk_freq_clkos:
+                          (FBK_MODE == "CLKOS2" || FBK_MODE == "INTCLKOS2")? exp_clk_freq_clkos2:
+                          (FBK_MODE == "CLKOS3" || FBK_MODE == "INTCLKOS3")? exp_clk_freq_clkos3:
+                          (FBK_MODE == "CLKOS4" || FBK_MODE == "INTCLKOS4")? exp_clk_freq_clkos4:
+                          (FBK_MODE == "CLKOS5" || FBK_MODE == "INTCLKOS5")? exp_clk_freq_clkos5:
+              exp_clk_freq_clkos5;
+
+localparam clkop_trim_time = (CLKOP_TRIM == "0b0000" || CLKOP_TRIM == "0b1000")? 0.00:
+                             (CLKOP_TRIM == "0b0001" || CLKOP_TRIM == "0b1001")? 70.00:
+                             (CLKOP_TRIM == "0b0010" || CLKOP_TRIM == "0b1010")? 140.00:
+                 280.00;
+
+localparam clkos_trim_time = (CLKOS_TRIM == "0b0000" || CLKOS_TRIM == "0b1000")? 0.00:
+                             (CLKOS_TRIM == "0b0001" || CLKOS_TRIM == "0b1001")? 70.00:
+                             (CLKOS_TRIM == "0b0010" || CLKOS_TRIM == "0b1010")? 140.00:
+                 280.00;
+
+////initialize
+initial begin
+  refdetreset = 1'b0;
+  powerdown_done = (POWERDOWN_EN == 1)? 0 : 1;
+
+  clkop_trim_rise_test_done = (((TRIM_EN_P == 1 && CLKOP_TRIM_MODE == "Rising") || (TRIM_EN_S == 1 && CLKOS_TRIM_MODE == "Rising")) && DYN_PORTS_EN == 0)? 0 : 1;
+  clkos_trim_rise_test_done = (((TRIM_EN_P == 1 && CLKOP_TRIM_MODE == "Rising") || (TRIM_EN_S == 1 && CLKOS_TRIM_MODE == "Rising"))  && DYN_PORTS_EN == 0)? 0 : 1;
+
+  clkop_trim_fall_test_done = (((TRIM_EN_P == 1 && CLKOP_TRIM_MODE == "Falling") || (TRIM_EN_S == 1 && CLKOS_TRIM_MODE == "Falling")) && DYN_PORTS_EN == 0)? 0 : 1;
+  clkos_trim_fall_test_done = (((TRIM_EN_P == 1 && CLKOP_TRIM_MODE == "Falling") || (TRIM_EN_S == 1 && CLKOS_TRIM_MODE == "Falling")) && DYN_PORTS_EN == 0)? 0 : 1;
+
+  dyn_p_done = (DYN_PORTS_EN == 1 && FBK_MODE != "CLKOP" && FBK_MODE != "INTCLKOP" && CLKOP_BYPASS == 0 && TRIM_EN_P == 0)? 0 : 1;
+  dyn_s_done = (DYN_PORTS_EN == 1 && CLKOS_EN == 1 && FBK_MODE != "CLKOS" && FBK_MODE != "INTCLKOS" && CLKOS_BYPASS == 0)? 0 : 1;
+  dyn_s2_done = (DYN_PORTS_EN == 1 && CLKOS2_EN == 1 && FBK_MODE != "CLKOS2" && FBK_MODE != "INTCLKOS2" && CLKOS2_BYPASS == 0)? 0 : 1;
+  dyn_s3_done = (DYN_PORTS_EN == 1 && CLKOS3_EN == 1 && FBK_MODE != "CLKOS3" && FBK_MODE != "INTCLKOS3" && CLKOS3_BYPASS == 0)? 0 : 1;
+  dyn_s4_done = (DYN_PORTS_EN == 1 && CLKOS4_EN == 1 && FBK_MODE != "CLKOS4" && FBK_MODE != "INTCLKOS4" && CLKOS4_BYPASS == 0)? 0 : 1;
+  dyn_s5_done = (DYN_PORTS_EN == 1 && CLKOS5_EN == 1 && FBK_MODE != "CLKOS5" && FBK_MODE != "INTCLKOS5" && CLKOS5_BYPASS == 0)? 0 : 1;
+  reset_done = 1'b0;
+  clkop_trim_cnt_rise = 32'd0;
+  clkos_trim_cnt_rise = 32'd0;
+  clkop_trim_cnt_fall = 32'd0;
+  clkos_trim_cnt_fall = 32'd0;
+    error_dyn_phase_p = 1'b0;
+    error_dyn_phase_s = 1'b0;
+    error_dyn_phase_s2 = 1'b0;
+    error_dyn_phase_s3 = 1'b0;
+    error_dyn_phase_s4 = 1'b0;
+    error_dyn_phase_s5 = 1'b0;
+    error_flag_pdn = 1'b0;
+    error_flag_w = 1'b0;
+    error_flag_w2 = 1'b0;
+    error_flag_w3 = 1'b0;
+    error_flag_w4 = 1'b0;
+    error_flag_w5 = 1'b0;
+    error_flag_w6 = 1'b0;
+  error_flag_reset = 1'b0;
+
+  error_trim_rise_p = 1'b0;
+    error_trim_rise_s = 1'b0;
+    error_trim_fall_p = 1'b0;
+    error_trim_fall_s = 1'b0;
+
+    first_sample_trim_clkop  = 1'b0;
+    first_sample_trim_clkos  = 1'b0;
+
+  error_flag_lock = 1'b0;
+
+  lock_done = 1'b1;
+  pllpd_en_n_i = 1'b1;
+  legacy_i = 1'b0;
+    phasedir_i = 1'b1;
+    phasestep_i = 1'b0;
+    phaseloadreg_i = 1'b0;
+    phasesel_i [2:0] = 3'b000;
+
+  end
+
+
+generate
+   if (ENCLKOP_EN == 1) begin
+    initial begin
+        enclkop_i = 1;
+        #5000000;
+        enclkop_i = 0;
+    #5000000;
+    enclkop_i = 1;
+  end
+  end
+endgenerate
+
+
+generate
+   if (ENCLKOS_EN == 1) begin
+    initial begin
+        enclkos_i = 1;
+        #5000000;
+        enclkos_i = 0;
+    #5000000;
+    enclkos_i = 1;
+  end
+  end
+endgenerate
+
+generate
+   if (ENCLKOS2_EN == 1) begin
+    initial begin
+        enclkos2_i = 1;
+        #5000000;
+        enclkos2_i = 0;
+    #5000000;
+    enclkos2_i = 1;
+  end
+  end
+endgenerate
+
+
+generate
+   if (ENCLKOS3_EN == 1) begin
+    initial begin
+        enclkos3_i = 1;
+        #5000000;
+        enclkos3_i = 0;
+    #5000000;
+    enclkos3_i = 1;
+  end
+  end
+endgenerate
+
+
+generate
+   if (ENCLKOS4_EN == 1) begin
+    initial begin
+        enclkos4_i = 1;
+        #5000000;
+        enclkos4_i = 0;
+    #5000000;
+    enclkos4_i = 1;
+  end
+  end
+endgenerate
+
+generate
+   if (ENCLKOS5_EN == 1) begin
+    initial begin
+        enclkos5_i = 1;
+        #5000000;
+        enclkos5_i = 0;
+    #5000000;
+    enclkos5_i = 1;
+  end
+  end
+endgenerate
+
+initial begin
+  clki_i = 0;
+  forever clki_i = #(CLK_IN_PERIOD) ~clki_i;
+end
+
+reg CLK_GSR;
+initial begin
+  CLK_GSR = 0;
+  forever CLK_GSR = #5 ~CLK_GSR;
+end
+
+///////////////////// GSR /////////////////////
+reg USER_GSR = 1;
+wire GSROUT;
+
+initial begin
+forever begin
+#5;
+CLK_GSR = ~CLK_GSR;
+end
+end
+
+GSR GSR_INST (
+.GSR_N(USER_GSR),
+.CLK(CLK_GSR)
+);
+/////////////////////////////////////////////////
+
+
+
+//version 1.1
+// GSR  GSR_INST(
+   // .GSR     (1'b0   )
+  // ,.CLK     (CLK_GSR)
+  // ,.GSROUT  (GSROUT )
+// );
+
+wire   usr_fbclk_i;
+assign usr_fbclk_i = (FBK_MODE == "USERFBCLK")? clkop_o : 1'b0;
+
+assign apb_pclk_i     = clki_i;
+assign apb_preset_n_i = rstn_i;
+
+initial begin
+  rstn_i          = 0;
+  lmmi_resetn_i   = 1;
+  lmmi_clk_i      = 1'b1;
+  lmmi_request_i  = 0;
+  lmmi_wr_rdn_i   = 0;
+  lmmi_wdata_i    = 8'd0;
+  lmmi_offset_i   = 7'd0;
+  apb_penable_i   = 0;
+  apb_psel_i      = 0;
+  apb_pwrite_i    = 0;
+  apb_paddr_i     = 32'd0;
+  apb_pwdata_i    = 32'd0;
+  #300000
+  $display(" ---------------------------------------------- ");
+  $display("\tINFO: RESET DONE: --" );
+  $display(" ---------------------------------------------- ");
+  reset_done = 1;
+  rstn_i = 1;
+  lmmi_resetn_i = 1;
+  end
+
+
+  //#1000
+  //$display("Simtime: %d LMMI test begin", $stime);
+  //for (i=0; i<54; i=i+1) begin
+  //  @(negedge lmmi_clk_i) begin
+  //    lmmi_request_i  <= 1;
+  //    lmmi_wdata_i    <= 8'hff;
+  //    lmmi_offset_i   <= 7'h35;
+  //  end
+  //  @(negedge lmmi_clk_i)
+  //    lmmi_request_i  <= 0;
+  //  @(negedge lmmi_clk_i);
+  //end
+  //$display("Simtime: %d LMMI test end", $stime);
+
+
+ generate
+    if (PLL_LOCK_STICKY == 1) begin
+  initial begin
+  #700000000
+  if(lock_o == 0 && pllpd_en_n_i == 1) begin
+             error_flag_lock = 1;
+             $display(" ---------------------------------------------- ");
+               $display("\tERROR: LOCK TIME MISMATCH: --" );
+               $display(" ---------------------------------------------- ");
+                end
+  lock_done = 1;
+end
+end
+endgenerate
+
+
+
+
+generate
+    if (PLL_LOCK_STICKY == 0) begin
+  initial begin
+  #700000000
+  if(lock_o == 0 && pllpd_en_n_i == 1) begin
+             error_flag_lock = 1;
+             $display(" ---------------------------------------------- ");
+               $display("\tERROR: LOCK TIME MISMATCH: --" );
+               $display(" ---------------------------------------------- ");
+                end
+  lock_done = 1;
+end
+end
+endgenerate
+
+assign done_r = clkop_test_done &
+                clkos_test_done &
+                clkos2_test_done &
+                clkos3_test_done &
+                clkos4_test_done &
+                clkos5_test_done &
+                lock_done &
+                powerdown_done &
+                reset_done &
+                dyn_p_end_r;
+ generate
+    if (POWERDOWN_EN == 1) begin
+  initial begin
+  pllpd_en_n_i = 1;
+  wait(clkop_test_done &
+       clkos_test_done &
+       clkos2_test_done &
+       clkos3_test_done &
+       clkos4_test_done &
+       clkos5_test_done &
+       lock_done &
+       reset_done &
+       dyn_p_end_r)
+  pllpd_en_n_i = 0;
+  #500
+  if (lock_o) begin
+             error_flag_pdn = 1;
+             $display(" ---------------------------------------------- ");
+               $display("\tERROR: POWERDOWN MISMATCH: --" );
+               $display(" ---------------------------------------------- ");
+                end
+  #500
+  pllpd_en_n_i = 1;
+  powerdown_done = 1;
+end
+end
+endgenerate
+
+
+
+
+generate
+   if (ENCLKOP_EN == 0) begin
+     localparam EN_PHASE_CHECK_CLKOP = (CLKOP_BYPASS)? 0 :
+                                       (CLKOP_FREQ_ACTUAL == CLKOS_FREQ_ACTUAL )? (CLKOS_PHASE_ACTUAL  == 0) :
+                                       (CLKOP_FREQ_ACTUAL == CLKOS2_FREQ_ACTUAL)? (CLKOS2_PHASE_ACTUAL == 0) :
+                                       (CLKOP_FREQ_ACTUAL == CLKOS3_FREQ_ACTUAL)? (CLKOS3_PHASE_ACTUAL == 0) :
+                                       (CLKOP_FREQ_ACTUAL == CLKOS4_FREQ_ACTUAL)? (CLKOS4_PHASE_ACTUAL == 0) :
+                                       (CLKOP_FREQ_ACTUAL == CLKOS5_FREQ_ACTUAL)? (CLKOS5_PHASE_ACTUAL == 0) : 0;
+     wire phase_0_clkop = (CLKOP_BYPASS)? clki_i :
+                          (CLKOP_FREQ_ACTUAL == CLKOS_FREQ_ACTUAL )? clkos_o :
+                          (CLKOP_FREQ_ACTUAL == CLKOS2_FREQ_ACTUAL)? clkos2_o :
+                          (CLKOP_FREQ_ACTUAL == CLKOS3_FREQ_ACTUAL)? clkos3_o :
+                          (CLKOP_FREQ_ACTUAL == CLKOS4_FREQ_ACTUAL)? clkos4_o :
+                          (CLKOP_FREQ_ACTUAL == CLKOS5_FREQ_ACTUAL)? clkos5_o : clkop_o;
+     clock_checker #
+     (
+      .CLK_NAME                              ("CLKOP"),
+      .EXP_CLK_FREQ                          ((CLKOP_BYPASS? CLKI_FREQ : CLKOP_FREQ_ACTUAL)),
+      .EXP_PHASE_SHIFT                       (CLKOP_PHASE_ACTUAL),
+      .EN_PHASE_CHECK                        (EN_PHASE_CHECK_CLKOP)
+     )
+     u_clkop_freq_checker
+     (
+      // Inputs
+      .rst_n                                 (rstn_i),
+      .pllpd_en_n                            (pllpd_en_n_i),
+      .testclk                               (clkop_o),
+      .phase_0_testclk                       (phase_0_clkop),
+      .lock                                  (lock_o),
+      // Outputs
+      .error_detected                        (clkop_error_detected),
+      .test_done                             (clkop_test_done));
+  end
+  else begin
+    assign clkop_error_detected = 1'b0;
+    assign clkop_test_done = 1'b1;
+  end
+
+  if (CLKOS_EN == 1 && ENCLKOS_EN == 0) begin
+     localparam EN_PHASE_CHECK_CLKOS = (CLKOS_BYPASS)? 0 :
+                                       (CLKOS_FREQ_ACTUAL == CLKOP_FREQ_ACTUAL )? (CLKOP_PHASE_ACTUAL  == 0) :
+                                       (CLKOS_FREQ_ACTUAL == CLKOS2_FREQ_ACTUAL)? (CLKOS2_PHASE_ACTUAL == 0) :
+                                       (CLKOS_FREQ_ACTUAL == CLKOS3_FREQ_ACTUAL)? (CLKOS3_PHASE_ACTUAL == 0) :
+                                       (CLKOS_FREQ_ACTUAL == CLKOS4_FREQ_ACTUAL)? (CLKOS4_PHASE_ACTUAL == 0) :
+                                       (CLKOS_FREQ_ACTUAL == CLKOS5_FREQ_ACTUAL)? (CLKOS5_PHASE_ACTUAL == 0) : 0;
+     wire phase_0_clkos = (CLKOS_BYPASS)? clki_i :
+                          (CLKOS_FREQ_ACTUAL == CLKOP_FREQ_ACTUAL )? clkop_o :
+                          (CLKOS_FREQ_ACTUAL == CLKOS2_FREQ_ACTUAL)? clkos2_o :
+                          (CLKOS_FREQ_ACTUAL == CLKOS3_FREQ_ACTUAL)? clkos3_o :
+                          (CLKOS_FREQ_ACTUAL == CLKOS4_FREQ_ACTUAL)? clkos4_o :
+                          (CLKOS_FREQ_ACTUAL == CLKOS5_FREQ_ACTUAL)? clkos5_o : clkos_o;
+    clock_checker #
+    (
+     .CLK_NAME                              ("CLKOS"),
+     .EXP_CLK_FREQ                          ((CLKOS_BYPASS? CLKI_FREQ : CLKOS_FREQ_ACTUAL)),
+     .EXP_PHASE_SHIFT                       (CLKOS_PHASE_ACTUAL),
+     .EN_PHASE_CHECK                        (EN_PHASE_CHECK_CLKOS)
+    )
+    u_clkos_freq_checker
+    (
+     // Inputs
+     .rst_n                                 (rstn_i),
+     .pllpd_en_n                            (pllpd_en_n_i),
+     .testclk                               (clkos_o),
+     .phase_0_testclk                       (phase_0_clkos),
+     .lock                                  (lock_o),
+     // Outputs
+     .error_detected                        (clkos_error_detected),
+     .test_done                             (clkos_test_done));
+  end
+  else begin
+    assign clkos_error_detected = 1'b0;
+    assign clkos_test_done = 1'b1;
+  end
+
+   if (CLKOS2_EN == 1 && ENCLKOS2_EN == 0) begin
+     localparam EN_PHASE_CHECK_CLKOS2 = (CLKOS2_BYPASS)? 0 :
+                                        (CLKOS2_FREQ_ACTUAL == CLKOP_FREQ_ACTUAL )? (CLKOP_PHASE_ACTUAL  == 0) :
+                                        (CLKOS2_FREQ_ACTUAL == CLKOS_FREQ_ACTUAL )? (CLKOS_PHASE_ACTUAL  == 0) :
+                                        (CLKOS2_FREQ_ACTUAL == CLKOS3_FREQ_ACTUAL)? (CLKOS3_PHASE_ACTUAL == 0) :
+                                        (CLKOS2_FREQ_ACTUAL == CLKOS4_FREQ_ACTUAL)? (CLKOS4_PHASE_ACTUAL == 0) :
+                                        (CLKOS2_FREQ_ACTUAL == CLKOS5_FREQ_ACTUAL)? (CLKOS5_PHASE_ACTUAL == 0) : 0;
+     wire phase_0_clkos2 = (CLKOS2_BYPASS)? clki_i :
+                           (CLKOS2_FREQ_ACTUAL == CLKOP_FREQ_ACTUAL )? clkop_o :
+                           (CLKOS2_FREQ_ACTUAL == CLKOS_FREQ_ACTUAL )? clkos_o :
+                           (CLKOS2_FREQ_ACTUAL == CLKOS3_FREQ_ACTUAL)? clkos3_o :
+                           (CLKOS2_FREQ_ACTUAL == CLKOS4_FREQ_ACTUAL)? clkos4_o :
+                           (CLKOS2_FREQ_ACTUAL == CLKOS5_FREQ_ACTUAL)? clkos5_o : clkos2_o;
+     clock_checker #
+     (
+      .CLK_NAME                              ("CLKOS2"),
+      .EXP_CLK_FREQ                          ((CLKOS2_BYPASS? CLKI_FREQ : CLKOS2_FREQ_ACTUAL)),
+      .EXP_PHASE_SHIFT                       (CLKOS2_PHASE_ACTUAL),
+      .EN_PHASE_CHECK                        (EN_PHASE_CHECK_CLKOS2)
+     )
+     u_clkos2_freq_checker
+     (
+      // Inputs
+      .rst_n                                 (rstn_i),
+      .pllpd_en_n                            (pllpd_en_n_i),
+      .testclk                               (clkos2_o),
+      .phase_0_testclk                       (phase_0_clkos2),
+      .lock                                  (lock_o),
+      // Outputs
+      .error_detected                        (clkos2_error_detected),
+      .test_done                             (clkos2_test_done));
+  end
+  else begin
+    assign clkos2_error_detected = 1'b0;
+    assign clkos2_test_done = 1'b1;
+  end
+
+  if (CLKOS3_EN == 1 && ENCLKOS3_EN == 0) begin
+     localparam EN_PHASE_CHECK_CLKOS3 = (CLKOS3_BYPASS)? 0 :
+                                        (CLKOS3_FREQ_ACTUAL == CLKOP_FREQ_ACTUAL )? (CLKOP_PHASE_ACTUAL  == 0) :
+                                        (CLKOS3_FREQ_ACTUAL == CLKOS_FREQ_ACTUAL )? (CLKOS_PHASE_ACTUAL  == 0) :
+                                        (CLKOS3_FREQ_ACTUAL == CLKOS2_FREQ_ACTUAL)? (CLKOS2_PHASE_ACTUAL == 0) :
+                                        (CLKOS3_FREQ_ACTUAL == CLKOS4_FREQ_ACTUAL)? (CLKOS4_PHASE_ACTUAL == 0) :
+                                        (CLKOS3_FREQ_ACTUAL == CLKOS5_FREQ_ACTUAL)? (CLKOS5_PHASE_ACTUAL == 0) : 0;
+     wire phase_0_clkos3 = (CLKOS3_BYPASS)? clki_i :
+                           (CLKOS3_FREQ_ACTUAL == CLKOP_FREQ_ACTUAL )? clkop_o :
+                           (CLKOS3_FREQ_ACTUAL == CLKOS_FREQ_ACTUAL )? clkos_o :
+                           (CLKOS3_FREQ_ACTUAL == CLKOS2_FREQ_ACTUAL)? clkos2_o :
+                           (CLKOS3_FREQ_ACTUAL == CLKOS4_FREQ_ACTUAL)? clkos4_o :
+                           (CLKOS3_FREQ_ACTUAL == CLKOS5_FREQ_ACTUAL)? clkos5_o : clkos3_o;
+     clock_checker #
+     (
+      .CLK_NAME                              ("CLKOS3"),
+      .EXP_CLK_FREQ                          ((CLKOS3_BYPASS? CLKI_FREQ : CLKOS3_FREQ_ACTUAL)),
+      .EXP_PHASE_SHIFT                       (CLKOS3_PHASE_ACTUAL),
+      .EN_PHASE_CHECK                        (EN_PHASE_CHECK_CLKOS3)
+     )
+     u_clkos3_freq_checker
+     (
+      // Inputs
+      .rst_n                                 (rstn_i),
+      .pllpd_en_n                            (pllpd_en_n_i),
+      .testclk                               (clkos3_o),
+      .phase_0_testclk                       (phase_0_clkos3),
+      .lock                                  (lock_o),
+      // Outputs
+      .error_detected                        (clkos3_error_detected),
+      .test_done                             (clkos3_test_done));
+  end
+  else begin
+    assign clkos3_error_detected = 1'b0;
+    assign clkos3_test_done = 1'b1;
+  end
+
+  if (CLKOS4_EN == 1 && ENCLKOS4_EN == 0) begin
+     localparam EN_PHASE_CHECK_CLKOS4 = (CLKOS4_BYPASS)? 0 :
+                                        (CLKOS4_FREQ_ACTUAL == CLKOP_FREQ_ACTUAL )? (CLKOP_PHASE_ACTUAL  == 0) :
+                                        (CLKOS4_FREQ_ACTUAL == CLKOS_FREQ_ACTUAL )? (CLKOS_PHASE_ACTUAL  == 0) :
+                                        (CLKOS4_FREQ_ACTUAL == CLKOS2_FREQ_ACTUAL)? (CLKOS2_PHASE_ACTUAL == 0) :
+                                        (CLKOS4_FREQ_ACTUAL == CLKOS3_FREQ_ACTUAL)? (CLKOS3_PHASE_ACTUAL == 0) :
+                                        (CLKOS4_FREQ_ACTUAL == CLKOS5_FREQ_ACTUAL)? (CLKOS5_PHASE_ACTUAL == 0) : 0;
+     wire phase_0_clkos4 = (CLKOS4_BYPASS)? clki_i :
+                           (CLKOS4_FREQ_ACTUAL == CLKOP_FREQ_ACTUAL )? clkop_o :
+                           (CLKOS4_FREQ_ACTUAL == CLKOS_FREQ_ACTUAL )? clkos_o :
+                           (CLKOS4_FREQ_ACTUAL == CLKOS2_FREQ_ACTUAL)? clkos2_o :
+                           (CLKOS4_FREQ_ACTUAL == CLKOS3_FREQ_ACTUAL)? clkos3_o :
+                           (CLKOS4_FREQ_ACTUAL == CLKOS5_FREQ_ACTUAL)? clkos5_o : clkos4_o;
+     clock_checker #
+     (
+      .CLK_NAME                              ("CLKOS4"),
+      .EXP_CLK_FREQ                          ((CLKOS4_BYPASS? CLKI_FREQ : CLKOS4_FREQ_ACTUAL)),
+      .EXP_PHASE_SHIFT                       (CLKOS4_PHASE_ACTUAL),
+      .EN_PHASE_CHECK                        (EN_PHASE_CHECK_CLKOS4)
+     )
+     u_clkos4_freq_checker
+     (
+      // Inputs
+      .rst_n                                 (rstn_i),
+      .pllpd_en_n                            (pllpd_en_n_i),
+      .testclk                               (clkos4_o),
+      .phase_0_testclk                       (phase_0_clkos4),
+      .lock                                  (lock_o),
+      // Outputs
+      .error_detected                        (clkos4_error_detected),
+      .test_done                             (clkos4_test_done));
+  end
+  else begin
+    assign clkos4_error_detected = 1'b0;
+    assign clkos4_test_done = 1'b1;
+  end
+
+   if (CLKOS5_EN == 1 && ENCLKOS5_EN == 0) begin
+     localparam EN_PHASE_CHECK_CLKOS5 = (CLKOS5_BYPASS)? 0 :
+                                        (CLKOS5_FREQ_ACTUAL == CLKOP_FREQ_ACTUAL )? (CLKOP_PHASE_ACTUAL  == 0) :
+                                        (CLKOS5_FREQ_ACTUAL == CLKOS_FREQ_ACTUAL )? (CLKOS_PHASE_ACTUAL  == 0) :
+                                        (CLKOS5_FREQ_ACTUAL == CLKOS2_FREQ_ACTUAL)? (CLKOS2_PHASE_ACTUAL == 0) :
+                                        (CLKOS5_FREQ_ACTUAL == CLKOS3_FREQ_ACTUAL)? (CLKOS3_PHASE_ACTUAL == 0) :
+                                        (CLKOS5_FREQ_ACTUAL == CLKOS4_FREQ_ACTUAL)? (CLKOS4_PHASE_ACTUAL == 0) : 0;
+     wire phase_0_clkos5 = (CLKOS5_BYPASS)? clki_i :
+                           (CLKOS5_FREQ_ACTUAL == CLKOP_FREQ_ACTUAL )? clkop_o :
+                           (CLKOS5_FREQ_ACTUAL == CLKOS_FREQ_ACTUAL )? clkos_o :
+                           (CLKOS5_FREQ_ACTUAL == CLKOS2_FREQ_ACTUAL)? clkos2_o :
+                           (CLKOS5_FREQ_ACTUAL == CLKOS3_FREQ_ACTUAL)? clkos3_o :
+                           (CLKOS5_FREQ_ACTUAL == CLKOS4_FREQ_ACTUAL)? clkos4_o : clkos5_o;
+     clock_checker #
+     (
+      .CLK_NAME                              ("CLKOS5"),
+      .EXP_CLK_FREQ                          ((CLKOS5_BYPASS? CLKI_FREQ : CLKOS5_FREQ_ACTUAL)),
+      .EXP_PHASE_SHIFT                       (CLKOS5_PHASE_ACTUAL),
+      .EN_PHASE_CHECK                        (EN_PHASE_CHECK_CLKOS5)
+     )
+     u_clkos5_freq_checker
+     (
+      // Inputs
+      .rst_n                                 (rstn_i),
+      .pllpd_en_n                            (pllpd_en_n_i),
+      .testclk                               (clkos5_o),
+      .phase_0_testclk                       (phase_0_clkos5),
+      .lock                                  (lock_o),
+      // Outputs
+      .error_detected                        (clkos5_error_detected),
+      .test_done                             (clkos5_test_done));
+  end
+  else begin
+    assign clkos5_error_detected = 1'b0;
+    assign clkos5_test_done = 1'b1;
+  end
+
+endgenerate
+
+
+task apb_wr;
+input   [7:0]   addr;
+input   [7:0]   data;
+begin
+    // SETUP phase
+    @(posedge apb_pclk_i) begin
+        apb_paddr_i = {addr,2'd0};
+        apb_pwrite_i = 1'b1;
+        apb_psel_i = 1'b1;
+        apb_pwdata_i = data;
+    end
+
+    // ACCESS phase
+    @(posedge apb_pclk_i) begin
+        apb_penable_i = 1'b1;
+    end
+
+    // extended until PREADY is asserted
+    @(negedge apb_pclk_i);
+    wait (apb_pready_o);
+
+    @(posedge apb_pclk_i) begin
+        apb_psel_i = 1'b0;
+        apb_penable_i = 1'b0;
+        apb_pwdata_i = 8'h0;
+    end
+
+    $display("%12d: [Write] addr %2x data %2x",$stime, addr, data);
+end
+endtask // apb_wr
+
+task apb_rd;
+input   [7:0]   addr;
+input   [7:0]   chk;
+input           verify;
+output [7:0]    rdata;
+begin
+    // SETUP phase
+    @(posedge apb_pclk_i) begin
+        apb_paddr_i = {addr,2'd0};
+        apb_pwrite_i = 1'b0;
+        apb_psel_i = 1'b1;
+    end
+
+    // ACCESS phase
+    @(posedge apb_pclk_i) begin
+        apb_penable_i = 1'b1;
+    end
+
+    // extended until PREADY is asserted
+    @(negedge apb_pclk_i);
+    wait (apb_pready_o);
+
+    @(posedge apb_pclk_i) begin
+        apb_psel_i = 1'b0;
+        apb_penable_i = 1'b0;
+    end
+
+    rdata = apb_prdata_o;
+
+    if (verify && apb_prdata_o != chk)
+        $display("%12d: [ERROR] addr %2x data %2x != exp %2x",$stime, addr, apb_prdata_o, chk);
+    else
+        $display("%12d: [Read] addr %2x data %2x",$stime, addr, apb_prdata_o);
+end
+endtask // apb_rd
+
+
+assign dyn_p_start_r = clkop_test_done &
+                       clkos_test_done &
+                       clkos2_test_done &
+                       clkos3_test_done &
+                       clkos4_test_done &
+                       clkos5_test_done &
+                       reset_done;
+
+
+generate
+if (DYN_PORTS_EN == 1 && FBK_MODE != "CLKOP" && FBK_MODE != "INTCLKOP" && CLKOP_BYPASS == 0) begin
+initial begin
+wait(dyn_p_start_r)
+#400
+phasestep_i  = 1'b1;
+#10000;
+phasedir_i  = 1'b0;
+phaseloadreg_i = 1'b0;
+#10000
+phasestep_i  = 1'b0;
+#10000;
+phasedir_i  = 1'b0;
+phaseloadreg_i = 1'b1;
+#5000;
+phasesel_i [2:0] = 3'b000;
+#10000;
+phasestep_i  = 1'b1;
+#10000;
+phasestep_i  = 1'b0;
+dyn_p_done = 1;
+
+
+end
+end
+endgenerate
+
+assign dyn_s_start_r = (FBK_MODE == "CLKOP" || FBK_MODE == "INTCLKOP"|| CLKOP_BYPASS == 1)? dyn_p_start_r : dyn_p_start_r & dyn_p_done;
+
+
+generate
+if (CLKOS_EN == 1 && DYN_PORTS_EN == 1 && FBK_MODE != "CLKOS" && FBK_MODE != "INTCLKOS" && CLKOS_BYPASS == 0) begin
+initial begin
+wait(dyn_s_start_r)
+#400
+phasestep_i  = 1'b1;
+#10000;
+phasedir_i  = 1'b0;
+phaseloadreg_i = 1'b0;
+#10000
+phasestep_i  = 1'b0;
+#10000;
+phasedir_i  = 1'b0;
+phaseloadreg_i = 1'b1;
+#5000;
+phasesel_i [2:0] = 3'b001;
+#10000;
+phasestep_i  = 1'b1;
+#10000;
+phasestep_i  = 1'b0;
+dyn_s_done = 1;
+
+end
+end
+endgenerate
+
+assign dyn_s2_start_r = (CLKOS_EN == 0 || CLKOS_BYPASS == 1 || FBK_MODE == "CLKOS" || FBK_MODE == "INTCLKOS")? dyn_s_start_r : dyn_s_start_r & dyn_s_done;
+
+generate
+if (CLKOS2_EN == 1 && DYN_PORTS_EN == 1 && FBK_MODE != "CLKOS2" && FBK_MODE != "INTCLKOS2" && CLKOS2_BYPASS == 0) begin
+initial begin
+wait(dyn_s2_start_r)
+#400
+phasestep_i  = 1'b1;
+#10000;
+phasedir_i  = 1'b0;
+phaseloadreg_i = 1'b0;
+#10000
+phasestep_i  = 1'b0;
+#10000;
+phasedir_i  = 1'b0;
+phaseloadreg_i = 1'b1;
+#5000;
+phasesel_i [2:0] = 3'b010;
+#10000;
+phasestep_i  = 1'b1;
+#10000;
+phasestep_i  = 1'b0;
+dyn_s2_done = 1;
+
+
+end
+end
+endgenerate
+
+assign dyn_s3_start_r = (CLKOS2_EN == 0 || CLKOS2_BYPASS == 1 || FBK_MODE == "CLKOS2" || FBK_MODE == "INTCLKOS2")? dyn_s2_start_r : dyn_s2_start_r & dyn_s2_done;
+
+generate
+if (CLKOS3_EN == 1 && DYN_PORTS_EN == 1 && FBK_MODE != "CLKOS3" && FBK_MODE != "INTCLKOS3" && CLKOS3_BYPASS == 0) begin
+initial begin
+wait(dyn_s3_start_r)
+#400
+phasestep_i  = 1'b1;
+#10000;
+phasedir_i  = 1'b0;
+phaseloadreg_i = 1'b0;
+#10000
+phasestep_i  = 1'b0;
+#10000;
+phasedir_i  = 1'b0;
+phaseloadreg_i = 1'b1;
+#5000;
+phasesel_i [2:0] = 3'b011;
+#10000;
+phasestep_i  = 1'b1;
+#10000;
+phasestep_i  = 1'b0;
+dyn_s3_done = 1;
+
+
+end
+end
+endgenerate
+
+assign dyn_s4_start_r = (CLKOS3_EN == 0 || CLKOS3_BYPASS == 1 || FBK_MODE == "CLKOS3" || FBK_MODE == "INTCLKOS3")? dyn_s3_start_r : dyn_s3_start_r & dyn_s3_done;
+
+generate
+if (CLKOS4_EN == 1 && DYN_PORTS_EN == 1 && FBK_MODE != "CLKOS4" && FBK_MODE != "INTCLKOS4" && CLKOS4_BYPASS == 0) begin
+initial begin
+wait(dyn_s4_start_r)
+#400
+phasestep_i  = 1'b1;
+#10000;
+phasedir_i  = 1'b0;
+phaseloadreg_i = 1'b0;
+#10000
+phasestep_i  = 1'b0;
+#10000;
+phasedir_i  = 1'b0;
+phaseloadreg_i = 1'b1;
+#5000;
+phasesel_i [2:0] = 3'b100;
+#10000;
+phasestep_i  = 1'b1;
+#10000;
+phasestep_i  = 1'b0;
+dyn_s4_done = 1;
+
+
+end
+end
+endgenerate
+
+assign dyn_s5_start_r = (CLKOS4_EN == 0 || CLKOS4_BYPASS == 1 || FBK_MODE == "CLKOS4" || FBK_MODE == "INTCLKOS4")? dyn_s4_start_r : dyn_s4_start_r & dyn_s4_done;
+
+generate
+if (CLKOS5_EN == 1 && DYN_PORTS_EN == 1 && FBK_MODE != "CLKOS5" && FBK_MODE != "INTCLKOS5" && CLKOS5_BYPASS == 0) begin
+initial begin
+wait(dyn_s5_start_r)
+#400
+phasestep_i  = 1'b1;
+#10000;
+phasedir_i  = 1'b0;
+phaseloadreg_i = 1'b0;
+#10000
+phasestep_i  = 1'b0;
+#10000;
+phasedir_i  = 1'b0;
+phaseloadreg_i = 1'b1;
+#5000;
+phasesel_i [2:0] = 3'b101;
+#10000;
+phasestep_i  = 1'b1;
+#10000;
+phasestep_i  = 1'b0;
+dyn_s5_done = 1;
+
+
+end
+end
+endgenerate
+
+assign dyn_p_end_r = dyn_p_done & dyn_s_done & dyn_s2_done & dyn_s3_done & dyn_s4_done & dyn_s5_done;
+assign done_r = clkop_test_done &
+                clkos_test_done &
+                clkos2_test_done &
+                clkos3_test_done &
+                clkos4_test_done &
+                clkos5_test_done &
+                lock_done &
+                powerdown_done &
+                reset_done &
+                dyn_p_end_r;
 
 initial begin
 `ifdef CADENCE_DUMP
       $timeformat (-15 ,1 , "ps", 15);
-      $recordfile("simwave_pll.trn");
+      //$shm_open ("test_pll.shm");
+      //$shm_probe(tb_top,("AC"));
+      $recordfile("test_pll.trn");
   `ifdef TRN_INSTANCE
         $recordvars(`TRN_INSTANCE);
   `else
@@ -262,855 +1053,45 @@ initial begin
 end
 
 initial begin
-  clken_clkop_i   = 0;
-  clken_clkophy_i = 0;
-  clken_clkos2_i  = 0;
-  clken_clkos3_i  = 0;
-  clken_clkos4_i  = 0;
-  clken_clkos5_i  = 0;
-  clken_clkos_i   = 0;
-  clken_testclk_i = 0;
-
-  phasedir_i      = 0;
-  phaseloadreg_i  = 0;
-  phasesel_i      = 0;
-  phasestep_i     = 0;
-
-  apb_paddr_i     = 0;
-  apb_pclk_i      = 0;
-  apb_penable_i   = 0;
-  apb_preset_n_i  = 0;
-  apb_psel_i      = 0;
-  apb_pwdata_i    = 0;
-  apb_pwrite_i    = 0;
-  lmmi_clk_i      = 0;
-  lmmi_offset_i   = 0;
-  lmmi_request_i  = 0;
-  lmmi_resetn_i   = 0;
-  lmmi_wdata_i    = 0;
-  lmmi_wr_rdn_i   = 0;
-
-  lock_timer      = 0;
-  exp_lock        = 1'b0;
-  #(1000*1000*100);  // delay 100us
-  exp_lock        = 1'b1;
-end
-
-initial begin
-  refclk_in_i = 0;
-  forever refclk_in_i = #(REFCLK_PERIOD/2) ~refclk_in_i;
-end
-
-reg gsr_clk;
-initial begin
-  gsr_clk = 0;
-  forever gsr_clk = #5000 ~gsr_clk;
-end
-
-assign usr_fbkclk_i = (EN_USR_FBKCLK)? clkout_clkop_o : 1'b0;
-
-initial begin
-  param_mismatch = 0;
-  reset_done = 0;
-  rst_n_i    = 0;
-  #300000
-  $display(" ---------------------------------------------- ");
-  $display("\tINFO: RESET DONE: --" );
-  $display(" ---------------------------------------------- ");
-  reset_done = 1;
-  rst_n_i    = 1;
-end
-
-always @* begin
-  if(rst_n_i) begin
-    @(posedge gsr_clk);
-    clken_clkop_i   <= 1;
-    clken_clkophy_i <= 1;
-    clken_clkos2_i  <= 1;
-    clken_clkos3_i  <= 1;
-    clken_clkos4_i  <= 1;
-    clken_clkos5_i  <= 1;
-    clken_clkos_i   <= 1;
-    clken_testclk_i <= 1;
-    apb_preset_n_i  <= 1;
-    lmmi_resetn_i   <= 1;
-  end
-  else begin
-    @(posedge gsr_clk);
-    clken_clkop_i   <= 0;
-    clken_clkophy_i <= 0;
-    clken_clkos2_i  <= 0;
-    clken_clkos3_i  <= 0;
-    clken_clkos4_i  <= 0;
-    clken_clkos5_i  <= 0;
-    clken_clkos_i   <= 0;
-    clken_testclk_i <= 0;
-    apb_preset_n_i  <= 0;
-    lmmi_resetn_i   <= 0;
-  end
-end //--always @*--
-
-assign pll_lock_w = (EN_LOCK_DETECT)? pll_lock_o : exp_lock;
-always @* begin
-  if(rst_n_i) begin
-    if(pll_lock_w) begin
-      @(posedge gsr_clk);
-      lock_timer <= 0;
+  wait(done_r)
+  #44;
+    if(clkop_error_detected  == 0 &&
+       clkos_error_detected  == 0 &&
+       clkos2_error_detected == 0 &&
+       clkos3_error_detected == 0 &&
+       clkos4_error_detected == 0 &&
+       clkos5_error_detected == 0 &&
+       error_flag_lock == 0 &&
+       error_flag_pdn == 0 &&
+       error_flag_reset == 0 &&
+       error_trim_rise_p == 0 &&
+       error_trim_rise_s == 0 &&
+       error_trim_fall_p == 0 &&
+       error_trim_fall_s == 0 &&
+       error_dyn_phase_p == 0 &&
+       error_dyn_phase_s == 0 &&
+       error_dyn_phase_s2 == 0 &&
+       error_dyn_phase_s3 == 0 &&
+       error_dyn_phase_s4 == 0 &&
+       error_dyn_phase_s5 == 0) begin
+      $display("\t \t ********** CLOCK MATCH **********\n");
+      $display("\t \t *ALL TESTS PASSED*\n");
+      $display("\t \t *SIMULATION PASSED*\n");
     end
     else begin
-      @(posedge gsr_clk);
-      lock_timer <= lock_timer + 1;
+      $display("\t \t ****** CLOCK MISMATCH ******\n");
+      $display("\t \t ************ TEST CASE FAIL ***********\n");
     end
-  end
-  else begin
-    @(posedge gsr_clk);
-    lock_timer <= 0;
-  end
-end //--always @*--
-
-
-function automatic real get_clk_freq;
-  input idx;
-  real  clk_freq[7:0];
-  begin
-    clk_freq[0] = CLK0_FREQ;
-    clk_freq[1] = CLK1_FREQ;
-    clk_freq[2] = CLK2_FREQ;
-    clk_freq[3] = CLK3_FREQ;
-    clk_freq[4] = CLK4_FREQ;
-    clk_freq[5] = CLK5_FREQ;
-    clk_freq[6] = CLK6_FREQ;
-    clk_freq[7] = CLK7_FREQ;
-
-    get_clk_freq = clk_freq[idx];
-  end
-endfunction // get_clk_freq
-
-function automatic real get_clk_phase;
-  input idx;
-  real  clk_phase[7:0];
-  begin
-    clk_phase[0] = CLK0_PHASE;
-    clk_phase[1] = CLK1_PHASE;
-    clk_phase[2] = CLK2_PHASE;
-    clk_phase[3] = CLK3_PHASE;
-    clk_phase[4] = CLK4_PHASE;
-    clk_phase[5] = CLK5_PHASE;
-    clk_phase[6] = CLK6_PHASE;
-    clk_phase[7] = CLK7_PHASE;
-
-    get_clk_phase = clk_phase[idx];
-  end
-endfunction // get_clk_phase
-
-function automatic reg get_en_clk;
-  input idx;
-  reg   en_clk[7:0];
-  begin
-    en_clk[0] = (EN_CLK0_OUT)? 1 : 0;
-    en_clk[1] = (EN_CLK1_OUT)? 1 : 0;
-    en_clk[2] = (EN_CLK2_OUT)? 1 : 0;
-    en_clk[3] = (EN_CLK3_OUT)? 1 : 0;
-    en_clk[4] = (EN_CLK4_OUT)? 1 : 0;
-    en_clk[5] = (EN_CLK5_OUT)? 1 : 0;
-    en_clk[6] = (EN_CLK6_OUT)? 1 : 0;
-    en_clk[7] = (EN_CLK7_OUT)? 1 : 0;
-
-    get_en_clk = en_clk[idx];
-  end
-endfunction // get_en_clk
-
-function automatic [8*7-1:0] get_clk_name;
-  input idx;
-  reg [8*7-1:0] clk_name[7:0];
-  begin
-    clk_name[0] = "CLKOP";
-    clk_name[1] = "CLKOS";
-    clk_name[2] = "CLKOS2";
-    clk_name[3] = "CLKOS3";
-    clk_name[4] = "CLKOS4";
-    clk_name[5] = "CLKOS5";
-    clk_name[6] = "CLKOPHY";
-    clk_name[7] = "TESTCLK";
-
-    get_clk_name = clk_name[idx];
-  end
-endfunction // get_clk_name
-
-function automatic reg get_clk_byp;
-  input idx;
-  reg   clk_byp[7:0];
-  begin
-    clk_byp[0] = CLK0_BYP;
-    clk_byp[1] = CLK1_BYP;
-    clk_byp[2] = CLK2_BYP;
-    clk_byp[3] = CLK3_BYP;
-    clk_byp[4] = CLK4_BYP;
-    clk_byp[5] = CLK5_BYP;
-    clk_byp[6] = CLK6_BYP;
-    clk_byp[7] = CLK7_BYP;
-
-    get_clk_byp = clk_byp[idx];
-  end
-endfunction // get_clk_byp
-
-function automatic reg get_en_phase_check;
-  input idx;
-  reg   en_phase_check[7:0];
-  begin
-    en_phase_check[0] = EN_PHASE_CHECK_CLK0;
-    en_phase_check[1] = EN_PHASE_CHECK_CLK1;
-    en_phase_check[2] = EN_PHASE_CHECK_CLK2;
-    en_phase_check[3] = EN_PHASE_CHECK_CLK3;
-    en_phase_check[4] = EN_PHASE_CHECK_CLK4;
-    en_phase_check[5] = EN_PHASE_CHECK_CLK5;
-    en_phase_check[6] = EN_PHASE_CHECK_CLK6;
-    en_phase_check[7] = EN_PHASE_CHECK_CLK7;
-
-    get_en_phase_check = en_phase_check[idx];
-  end
-endfunction // get_en_phase_check
-
-assign clk_out[0]    = clkout_clkop_o  ;
-assign clk_out[1]    = clkout_clkos_o  ;
-assign clk_out[2]    = clkout_clkos2_o ;
-assign clk_out[3]    = clkout_clkos3_o ;
-assign clk_out[4]    = clkout_clkos4_o ;
-assign clk_out[5]    = clkout_clkos5_o ;
-assign clk_out[6]    = clkout_clkophy_o;
-assign clk_out[7]    = clkout_testclk_o;
-
-initial begin
-  clk_phase[0]  = CLK0_PHASE;
-  clk_phase[1]  = CLK1_PHASE;
-  clk_phase[2]  = CLK2_PHASE;
-  clk_phase[3]  = CLK3_PHASE;
-  clk_phase[4]  = CLK4_PHASE;
-  clk_phase[5]  = CLK5_PHASE;
-  clk_phase[6]  = CLK6_PHASE;
-  clk_phase[7]  = CLK7_PHASE;
-
-  clk_freq[0]   = CLK0_FREQ;
-  clk_freq[1]   = CLK1_FREQ;
-  clk_freq[2]   = CLK2_FREQ;
-  clk_freq[3]   = CLK3_FREQ;
-  clk_freq[4]   = CLK4_FREQ;
-  clk_freq[5]   = CLK5_FREQ;
-  clk_freq[6]   = CLK6_FREQ;
-  clk_freq[7]   = CLK7_FREQ;
+    $stop;
 end
 
-genvar i;
-generate
-  for(i=0; i<8; i=i+1) begin : gen_clk
-    localparam IDX_CK           = i;
-    localparam EN_CLK           = (IDX_CK == 7)? EN_CLK7_OUT :
-                                  (IDX_CK == 6)? EN_CLK6_OUT :
-                                  (IDX_CK == 5)? EN_CLK5_OUT :
-                                  (IDX_CK == 4)? EN_CLK4_OUT :
-                                  (IDX_CK == 3)? EN_CLK3_OUT :
-                                  (IDX_CK == 2)? EN_CLK2_OUT :
-                                  (IDX_CK == 1)? EN_CLK1_OUT :
-                                                 EN_CLK0_OUT;
+  // #10000000
+  // $finish(1);
+// end
+`include "dut_inst.v"
 
-    if(EN_CLK) begin : gen_en_clk
-      localparam CLK_NAME        = (IDX_CK == 7)? "TESTCLK" :
-                                   (IDX_CK == 6)? "CLKOPHY" :
-                                   (IDX_CK == 5)? "CLKOS5"  :
-                                   (IDX_CK == 4)? "CLKOS4"  :
-                                   (IDX_CK == 3)? "CLKOS3"  :
-                                   (IDX_CK == 2)? "CLKOS2"  :
-                                   (IDX_CK == 1)? "CLKOS"   :
-                                                  "CLKOP"   ;
-
-      localparam CLK_BYP         = (IDX_CK == 7)? CLK7_BYP :
-                                   (IDX_CK == 6)? CLK6_BYP :
-                                   (IDX_CK == 5)? CLK5_BYP :
-                                   (IDX_CK == 4)? CLK4_BYP :
-                                   (IDX_CK == 3)? CLK3_BYP :
-                                   (IDX_CK == 2)? CLK2_BYP :
-                                   (IDX_CK == 1)? CLK1_BYP :
-                                                  CLK0_BYP ;
-
-      localparam CLK_FREQ        = (IDX_CK == 7)? CLK7_FREQ :
-                                   (IDX_CK == 6)? CLK6_FREQ :
-                                   (IDX_CK == 5)? CLK5_FREQ :
-                                   (IDX_CK == 4)? CLK4_FREQ :
-                                   (IDX_CK == 3)? CLK3_FREQ :
-                                   (IDX_CK == 2)? CLK2_FREQ :
-                                   (IDX_CK == 1)? CLK1_FREQ :
-                                                  CLK0_FREQ ;
-
-      localparam EXP_CLK_FREQ    = (CLK_BYP)? REFCLK_FREQ : CLK_FREQ;
-
-      localparam EN_PHASE_CHECK  = (IDX_CK == 7)? EN_PHASE_CHECK_CLK7 :
-                                   (IDX_CK == 6)? EN_PHASE_CHECK_CLK6 :
-                                   (IDX_CK == 5)? EN_PHASE_CHECK_CLK5 :
-                                   (IDX_CK == 4)? EN_PHASE_CHECK_CLK4 :
-                                   (IDX_CK == 3)? EN_PHASE_CHECK_CLK3 :
-                                   (IDX_CK == 2)? EN_PHASE_CHECK_CLK2 :
-                                   (IDX_CK == 1)? EN_PHASE_CHECK_CLK1 :
-                                                  EN_PHASE_CHECK_CLK0 ;
-
-      localparam EXP_PHASE_SHIFT = (IDX_CK == 7)? CLK7_PHASE :
-                                   (IDX_CK == 6)? CLK6_PHASE :
-                                   (IDX_CK == 5)? CLK5_PHASE :
-                                   (IDX_CK == 4)? CLK4_PHASE :
-                                   (IDX_CK == 3)? CLK3_PHASE :
-                                   (IDX_CK == 2)? CLK2_PHASE :
-                                   (IDX_CK == 1)? CLK1_PHASE :
-                                                  CLK0_PHASE ;
-
-      wire                    phase_0_clk;
-      reg   [31:0]            clk_counter;
-      wire  [2:0]             phase_0_clk_idx;
-
-      assign phase_0_clk_idx     = ((CLK_FREQ == clk_freq[(i+1)%8]) && (clk_phase[(i+1)%8] == 0))? ((i+1)%8) :
-                                   ((CLK_FREQ == clk_freq[(i+2)%8]) && (clk_phase[(i+2)%8] == 0))? ((i+2)%8) :
-                                   ((CLK_FREQ == clk_freq[(i+3)%8]) && (clk_phase[(i+3)%8] == 0))? ((i+3)%8) :
-                                   ((CLK_FREQ == clk_freq[(i+4)%8]) && (clk_phase[(i+4)%8] == 0))? ((i+4)%8) :
-                                   ((CLK_FREQ == clk_freq[(i+5)%8]) && (clk_phase[(i+5)%8] == 0))? ((i+5)%8) :
-                                   ((CLK_FREQ == clk_freq[(i+6)%8]) && (clk_phase[(i+6)%8] == 0))? ((i+6)%8) :
-                                   ((CLK_FREQ == clk_freq[(i+7)%8]) && (clk_phase[(i+7)%8] == 0))? ((i+7)%8) : i;
-
-      assign phase_0_clk         = (CLK_BYP)? refclk_in_i : clk_out[phase_0_clk_idx];
-
-      initial begin
-        clk_counter = 0;
-        forever begin
-          @(posedge refclk_in_i);
-          if(pll_lock_w) begin
-            @(posedge clk_out[i]);
-            @(negedge clk_out[i]);
-            clk_counter = clk_counter + 1;
-          end
-          else begin
-            clk_counter = 0;
-          end
-        end
-      end
-
-      assign clk_toggle_detected[i] = (clk_counter > 16);
-
-      clock_checker #
-      (
-       .CLK_NAME                              (CLK_NAME),
-       .EXP_CLK_FREQ                          (EXP_CLK_FREQ),
-       .EXP_PHASE_SHIFT                       (EXP_PHASE_SHIFT),
-       .EN_PHASE_CHECK                        (EN_PHASE_CHECK)
-      )
-      u_clk_freq_checker
-      (
-       // Inputs
-       .rst_n                                 (rst_n_i),
-       .pllpd_en_n                            (1'b1),
-       .testclk                               (clk_out[i]),
-       .phase_0_testclk                       (phase_0_clk),
-       .lock                                  (pll_lock_w),
-       // Outputs
-       .error_detected                        (clk_error_detected[i]),
-       .test_done                             (clk_test_done[i]));
-    end // gen_en_clk
-    else begin : gen_dis_clk
-      assign clk_error_detected[i]  = 1'b0;
-      assign clk_test_done[i]       = 1'b1;
-      assign clk_toggle_detected[i] = 1'b1;
-    end // gen_dis_clk
-  end // for
-
-endgenerate
-
-assign test_done = &clk_test_done | (lock_timer > LOCK_TIMEOUT_CNT);
-
-initial begin
-  wait(test_done);
-  repeat (50) @(posedge gsr_clk);
-
-  if(param_mismatch) begin
-    $display("\t \t ****** PARAMETER MISMATCH ******\n");
-    $display("\t \t ************ TEST CASE FAIL ***********\n");
-  end
-  else if(~&(clk_test_done & clk_toggle_detected)) begin
-    $display("\t \t ****** SOME CLOCK NOT DETECTED (clock detected = %0b) ******\n",clk_toggle_detected);
-    $display("\t \t ************ TEST CASE FAIL ***********\n");
-  end
-  else if(clk_error_detected) begin
-    $display("\t \t ****** CLOCK MISMATCH ******\n");
-    $display("\t \t ************ TEST CASE FAIL ***********\n");
-  end
-  else if(lock_timer > LOCK_TIMEOUT_CNT) begin
-    $display("\t \t ****** PLL LOCK TIMEOUT ******\n");
-    $display("\t \t ************ TEST CASE FAIL ***********\n");
-  end
-  else begin
-    $display("\t \t ********** CLOCK MATCH **********\n");
-    $display("\t \t *ALL TESTS PASSED*\n");
-    $display("\t \t *SIMULATION PASSED*\n");
-  end
-  $stop;
-end
-
-//--------------------------------------------------------------------------
-//--- Module Instantiation ---
-//--------------------------------------------------------------------------
-GSR GSR_INST (.GSR_N(rst_n_i), .CLK(gsr_clk));
-
-`ifdef GATE_SIM
-localparam GATE_SIM = `GATE_SIM;
-generate
-if(GATE_SIM != 1) begin : gen_rtl_sim
-`ifdef DUT_INST_NAME
-  `define DUT_HIER_PATH tb_top.gen_rtl_sim.`DUT_INST_NAME.lscc_pll_inst
+endmodule
 `endif
-`ifdef DUT_HIER_PATH
-  `include "dut_inst.v"
-  defparam `DUT_HIER_PATH.SIMULATION = 1;
-
-  initial begin
-    $display("----------------------------");
-    $display("[DEBUG] Simulation Mode : %0d",`DUT_HIER_PATH.SIMULATION);
-    $display("----------------------------");
-  end
-
-  `define DUT_HW_TOP  u_pll.PLLC_MODE_inst.PLL_CORE_inst.i_pll_ip_core
-
-  `ifdef DUT_HW_TOP
-    `define DUT_HW_PATH   `DUT_HW_TOP.i_pll_ip
-    `define DUT_HW_CLKOUT `DUT_HW_TOP.i_pll_output
-
-    `define PLL_HW__CLKR(hw_path) {hw_path.CLKR_5, \
-                                   hw_path.CLKR_4, \
-                                   hw_path.CLKR_3, \
-                                   hw_path.CLKR_2, \
-                                   hw_path.CLKR_1, \
-                                   hw_path.CLKR_0}
-
-    `define PLL_HW__CLKF(hw_path) {hw_path.CLKF_25, \
-                                   hw_path.CLKF_24, \
-                                   hw_path.CLKF_23, \
-                                   hw_path.CLKF_22, \
-                                   hw_path.CLKF_21, \
-                                   hw_path.CLKF_20, \
-                                   hw_path.CLKF_19, \
-                                   hw_path.CLKF_18, \
-                                   hw_path.CLKF_17, \
-                                   hw_path.CLKF_16, \
-                                   hw_path.CLKF_15, \
-                                   hw_path.CLKF_14, \
-                                   hw_path.CLKF_13, \
-                                   hw_path.CLKF_12, \
-                                   hw_path.CLKF_11, \
-                                   hw_path.CLKF_10, \
-                                   hw_path.CLKF_9 , \
-                                   hw_path.CLKF_8 , \
-                                   hw_path.CLKF_7 , \
-                                   hw_path.CLKF_6 , \
-                                   hw_path.CLKF_5 , \
-                                   hw_path.CLKF_4 , \
-                                   hw_path.CLKF_3 , \
-                                   hw_path.CLKF_2 , \
-                                   hw_path.CLKF_1 , \
-                                   hw_path.CLKF_0}
-
-    `define PLL_HW__BWADJ(hw_path) {hw_path.BWADJ_11,  \
-                                    hw_path.BWADJ_10,  \
-                                    hw_path.BWADJ_9 ,  \
-                                    hw_path.BWADJ_8 ,  \
-                                    hw_path.BWADJ_7 ,  \
-                                    hw_path.BWADJ_6 ,  \
-                                    hw_path.BWADJ_5 ,  \
-                                    hw_path.BWADJ_4 ,  \
-                                    hw_path.BWADJ_3 ,  \
-                                    hw_path.BWADJ_2 ,  \
-                                    hw_path.BWADJ_1 ,  \
-                                    hw_path.BWADJ_0 }
-
-    `define PLL_HW__CLKV(hw_path) {hw_path.CLKV_25, \
-                                   hw_path.CLKV_24, \
-                                   hw_path.CLKV_23, \
-                                   hw_path.CLKV_22, \
-                                   hw_path.CLKV_21, \
-                                   hw_path.CLKV_20, \
-                                   hw_path.CLKV_19, \
-                                   hw_path.CLKV_18, \
-                                   hw_path.CLKV_17, \
-                                   hw_path.CLKV_16, \
-                                   hw_path.CLKV_15, \
-                                   hw_path.CLKV_14, \
-                                   hw_path.CLKV_13, \
-                                   hw_path.CLKV_12, \
-                                   hw_path.CLKV_11, \
-                                   hw_path.CLKV_10, \
-                                   hw_path.CLKV_9 , \
-                                   hw_path.CLKV_8 , \
-                                   hw_path.CLKV_7 , \
-                                   hw_path.CLKV_6 , \
-                                   hw_path.CLKV_5 , \
-                                   hw_path.CLKV_4 , \
-                                   hw_path.CLKV_3 , \
-                                   hw_path.CLKV_2 , \
-                                   hw_path.CLKV_1 , \
-                                   hw_path.CLKV_0}
-
-    `define PLL_HW__CLKS(hw_path) {hw_path.CLKS_11,  \
-                                   hw_path.CLKS_10,  \
-                                   hw_path.CLKS_9 ,  \
-                                   hw_path.CLKS_8 ,  \
-                                   hw_path.CLKS_7 ,  \
-                                   hw_path.CLKS_6 ,  \
-                                   hw_path.CLKS_5 ,  \
-                                   hw_path.CLKS_4 ,  \
-                                   hw_path.CLKS_3 ,  \
-                                   hw_path.CLKS_2 ,  \
-                                   hw_path.CLKS_1 ,  \
-                                   hw_path.CLKS_0 }
-
-
-    `define PLL_HW__SSEN(hw_path)    hw_path.SSEN
-    `define PLL_HW__DITHEN(hw_path)  hw_path.DITHEN
-    `define PLL_HW__INTFB(hw_path)   hw_path.INTFB
-    `define PLL_HW__FASTEN(hw_path)  hw_path.FASTEN
-    `define PLL_HW__ENSAT(hw_path)   hw_path.ENSAT
-
-    `define PLL_HW__BYPASS(hw_path)  {hw_path.BYPASS_7, \
-                                      hw_path.BYPASS_6, \
-                                      hw_path.BYPASS_5, \
-                                      hw_path.BYPASS_4, \
-                                      hw_path.BYPASS_3, \
-                                      hw_path.BYPASS_2, \
-                                      hw_path.BYPASS_1, \
-                                      hw_path.BYPASS_0}
-
-    `define PLL_HW__CLKOD_0(hw_path) {hw_path.CLKOD_0_10,  \
-                                      hw_path.CLKOD_0_9 ,  \
-                                      hw_path.CLKOD_0_8 ,  \
-                                      hw_path.CLKOD_0_7 ,  \
-                                      hw_path.CLKOD_0_6 ,  \
-                                      hw_path.CLKOD_0_5 ,  \
-                                      hw_path.CLKOD_0_4 ,  \
-                                      hw_path.CLKOD_0_3 ,  \
-                                      hw_path.CLKOD_0_2 ,  \
-                                      hw_path.CLKOD_0_1 ,  \
-                                      hw_path.CLKOD_0_0 }
-
-    `define PLL_HW__CLKOD_1(hw_path) {hw_path.CLKOD_1_10,  \
-                                      hw_path.CLKOD_1_9 ,  \
-                                      hw_path.CLKOD_1_8 ,  \
-                                      hw_path.CLKOD_1_7 ,  \
-                                      hw_path.CLKOD_1_6 ,  \
-                                      hw_path.CLKOD_1_5 ,  \
-                                      hw_path.CLKOD_1_4 ,  \
-                                      hw_path.CLKOD_1_3 ,  \
-                                      hw_path.CLKOD_1_2 ,  \
-                                      hw_path.CLKOD_1_1 ,  \
-                                      hw_path.CLKOD_1_0 }
-
-    `define PLL_HW__CLKOD_2(hw_path) {hw_path.CLKOD_2_10,  \
-                                      hw_path.CLKOD_2_9 ,  \
-                                      hw_path.CLKOD_2_8 ,  \
-                                      hw_path.CLKOD_2_7 ,  \
-                                      hw_path.CLKOD_2_6 ,  \
-                                      hw_path.CLKOD_2_5 ,  \
-                                      hw_path.CLKOD_2_4 ,  \
-                                      hw_path.CLKOD_2_3 ,  \
-                                      hw_path.CLKOD_2_2 ,  \
-                                      hw_path.CLKOD_2_1 ,  \
-                                      hw_path.CLKOD_2_0 }
-
-    `define PLL_HW__CLKOD_3(hw_path) {hw_path.CLKOD_3_10,  \
-                                      hw_path.CLKOD_3_9 ,  \
-                                      hw_path.CLKOD_3_8 ,  \
-                                      hw_path.CLKOD_3_7 ,  \
-                                      hw_path.CLKOD_3_6 ,  \
-                                      hw_path.CLKOD_3_5 ,  \
-                                      hw_path.CLKOD_3_4 ,  \
-                                      hw_path.CLKOD_3_3 ,  \
-                                      hw_path.CLKOD_3_2 ,  \
-                                      hw_path.CLKOD_3_1 ,  \
-                                      hw_path.CLKOD_3_0 }
-
-    `define PLL_HW__CLKOD_4(hw_path) {hw_path.CLKOD_4_10,  \
-                                      hw_path.CLKOD_4_9 ,  \
-                                      hw_path.CLKOD_4_8 ,  \
-                                      hw_path.CLKOD_4_7 ,  \
-                                      hw_path.CLKOD_4_6 ,  \
-                                      hw_path.CLKOD_4_5 ,  \
-                                      hw_path.CLKOD_4_4 ,  \
-                                      hw_path.CLKOD_4_3 ,  \
-                                      hw_path.CLKOD_4_2 ,  \
-                                      hw_path.CLKOD_4_1 ,  \
-                                      hw_path.CLKOD_4_0 }
-
-    `define PLL_HW__CLKOD_5(hw_path) {hw_path.CLKOD_5_10,  \
-                                      hw_path.CLKOD_5_9 ,  \
-                                      hw_path.CLKOD_5_8 ,  \
-                                      hw_path.CLKOD_5_7 ,  \
-                                      hw_path.CLKOD_5_6 ,  \
-                                      hw_path.CLKOD_5_5 ,  \
-                                      hw_path.CLKOD_5_4 ,  \
-                                      hw_path.CLKOD_5_3 ,  \
-                                      hw_path.CLKOD_5_2 ,  \
-                                      hw_path.CLKOD_5_1 ,  \
-                                      hw_path.CLKOD_5_0 }
-
-    `define PLL_HW__CLKOD_6(hw_path) {hw_path.CLKOD_6_10,  \
-                                      hw_path.CLKOD_6_9 ,  \
-                                      hw_path.CLKOD_6_8 ,  \
-                                      hw_path.CLKOD_6_7 ,  \
-                                      hw_path.CLKOD_6_6 ,  \
-                                      hw_path.CLKOD_6_5 ,  \
-                                      hw_path.CLKOD_6_4 ,  \
-                                      hw_path.CLKOD_6_3 ,  \
-                                      hw_path.CLKOD_6_2 ,  \
-                                      hw_path.CLKOD_6_1 ,  \
-                                      hw_path.CLKOD_6_0 }
-
-    `define PLL_HW__CLKOD_7(hw_path) {hw_path.CLKOD_7_10,  \
-                                      hw_path.CLKOD_7_9 ,  \
-                                      hw_path.CLKOD_7_8 ,  \
-                                      hw_path.CLKOD_7_7 ,  \
-                                      hw_path.CLKOD_7_6 ,  \
-                                      hw_path.CLKOD_7_5 ,  \
-                                      hw_path.CLKOD_7_4 ,  \
-                                      hw_path.CLKOD_7_3 ,  \
-                                      hw_path.CLKOD_7_2 ,  \
-                                      hw_path.CLKOD_7_1 ,  \
-                                      hw_path.CLKOD_7_0 }
-
-    `define PLL_HW__BYPASS0(hw_path)  hw_path.lmmi_bypassa
-    `define PLL_HW__BYPASS1(hw_path)  hw_path.lmmi_bypassb
-    `define PLL_HW__BYPASS2(hw_path)  hw_path.lmmi_bypassc
-    `define PLL_HW__BYPASS3(hw_path)  hw_path.lmmi_bypassd
-    `define PLL_HW__BYPASS4(hw_path)  hw_path.lmmi_bypasse
-    `define PLL_HW__BYPASS5(hw_path)  hw_path.lmmi_bypassf
-    `define PLL_HW__BYPASS6(hw_path)  hw_path.lmmi_bypassphy
-    `define PLL_HW__BYPASS7(hw_path)  hw_path.lmmi_bypassclk7
-
-    `define PLL_HW__DELA(hw_path)    hw_path.lmmi_dela
-    `define PLL_HW__DELB(hw_path)    hw_path.lmmi_delb
-    `define PLL_HW__DELC(hw_path)    hw_path.lmmi_delc
-    `define PLL_HW__DELD(hw_path)    hw_path.lmmi_deld
-    `define PLL_HW__DELE(hw_path)    hw_path.lmmi_dele
-    `define PLL_HW__DELF(hw_path)    hw_path.lmmi_delf
-    `define PLL_HW__DELPHY(hw_path)  hw_path.lmmi_delphy
-    `define PLL_HW__DELCLK7(hw_path) hw_path.lmmi_delclk7
-    `define PLL_HW__DIVA(hw_path)    hw_path.lmmi_diva
-    `define PLL_HW__DIVB(hw_path)    hw_path.lmmi_divb
-    `define PLL_HW__DIVC(hw_path)    hw_path.lmmi_divc
-    `define PLL_HW__DIVD(hw_path)    hw_path.lmmi_divd
-    `define PLL_HW__DIVE(hw_path)    hw_path.lmmi_dive
-    `define PLL_HW__DIVF(hw_path)    hw_path.lmmi_divf
-    `define PLL_HW__DIVPHY(hw_path)  hw_path.lmmi_divphy
-    `define PLL_HW__DIVCLK7(hw_path) hw_path.lmmi_divclk7
-
-
-    wire [5:0]                  pll_hw_clkr;
-    wire [25:0]                 pll_hw_clkf;
-    wire [11:0]                 pll_hw_bwadj;
-    wire [25:0]                 pll_hw_clkv;
-    wire [11:0]                 pll_hw_clks;
-    wire                        pll_hw_ssen;
-    wire                        pll_hw_dithen;
-    wire                        pll_hw_intfb;
-    wire                        pll_hw_fasten;
-    wire                        pll_hw_ensat;
-    wire [7:0]                  pll_hw_bypass;
-    wire [10:0]                 pll_hw_clkod_0;
-    wire [10:0]                 pll_hw_clkod_1;
-    wire [10:0]                 pll_hw_clkod_2;
-    wire [10:0]                 pll_hw_clkod_3;
-    wire [10:0]                 pll_hw_clkod_4;
-    wire [10:0]                 pll_hw_clkod_5;
-    wire [10:0]                 pll_hw_clkod_6;
-    wire [10:0]                 pll_hw_clkod_7;
-
-    wire [7:0]                  pll_hw_lmmi_dela;
-    wire [7:0]                  pll_hw_lmmi_delb;
-    wire [7:0]                  pll_hw_lmmi_delc;
-    wire [7:0]                  pll_hw_lmmi_deld;
-    wire [7:0]                  pll_hw_lmmi_dele;
-    wire [7:0]                  pll_hw_lmmi_delf;
-    wire [7:0]                  pll_hw_lmmi_delphy;
-    wire [7:0]                  pll_hw_lmmi_delclk7;
-    wire [7:0]                  pll_hw_lmmi_diva;
-    wire [7:0]                  pll_hw_lmmi_divb;
-    wire [7:0]                  pll_hw_lmmi_divc;
-    wire [7:0]                  pll_hw_lmmi_divd;
-    wire [7:0]                  pll_hw_lmmi_dive;
-    wire [7:0]                  pll_hw_lmmi_divf;
-    wire [7:0]                  pll_hw_lmmi_divphy;
-    wire [7:0]                  pll_hw_lmmi_divclk7;
-
-    //generate
-      if(!EN_EXT_CLKDIV) begin : gen_int_outclkdiv
-        assign pll_hw_clkr    = `PLL_HW__CLKR(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkf    = `PLL_HW__CLKF(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_bwadj   = `PLL_HW__BWADJ(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkv    = `PLL_HW__CLKV(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clks    = `PLL_HW__CLKS(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_ssen    = `PLL_HW__SSEN(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_dithen  = `PLL_HW__DITHEN(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_intfb   = `PLL_HW__INTFB(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_fasten  = `PLL_HW__FASTEN(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_ensat   = `PLL_HW__ENSAT(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_0 = `PLL_HW__CLKOD_0(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_1 = `PLL_HW__CLKOD_1(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_2 = `PLL_HW__CLKOD_2(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_3 = `PLL_HW__CLKOD_3(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_4 = `PLL_HW__CLKOD_4(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_5 = `PLL_HW__CLKOD_5(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_6 = `PLL_HW__CLKOD_6(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_7 = `PLL_HW__CLKOD_7(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_PATH);
-
-        assign pll_hw_bypass[0]    = `PLL_HW__BYPASS0(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_bypass[1]    = `PLL_HW__BYPASS1(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_bypass[2]    = `PLL_HW__BYPASS2(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_bypass[3]    = `PLL_HW__BYPASS3(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_bypass[4]    = `PLL_HW__BYPASS4(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_bypass[5]    = `PLL_HW__BYPASS5(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_bypass[6]    = `PLL_HW__BYPASS6(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_bypass[7]    = `PLL_HW__BYPASS7(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-
-        assign pll_hw_lmmi_dela    = `PLL_HW__DELA(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_delb    = `PLL_HW__DELB(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_delc    = `PLL_HW__DELC(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_deld    = `PLL_HW__DELD(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_dele    = `PLL_HW__DELE(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_delf    = `PLL_HW__DELF(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_delphy  = `PLL_HW__DELPHY(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_delclk7 = `PLL_HW__DELCLK7(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_diva    = `PLL_HW__DIVA(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_divb    = `PLL_HW__DIVB(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_divc    = `PLL_HW__DIVC(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_divd    = `PLL_HW__DIVD(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_dive    = `PLL_HW__DIVE(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_divf    = `PLL_HW__DIVF(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_divphy  = `PLL_HW__DIVPHY(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_divclk7 = `PLL_HW__DIVCLK7(`DUT_HIER_PATH.gen_int_outclkdiv.`DUT_HW_CLKOUT);
-      end // gen_int_outclkdiv
-
-      else begin : gen_ext_outclkdiv
-        assign pll_hw_clkr    = `PLL_HW__CLKR(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkf    = `PLL_HW__CLKF(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_bwadj   = `PLL_HW__BWADJ(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkv    = `PLL_HW__CLKV(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clks    = `PLL_HW__CLKS(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_ssen    = `PLL_HW__SSEN(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_dithen  = `PLL_HW__DITHEN(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_intfb   = `PLL_HW__INTFB(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_fasten  = `PLL_HW__FASTEN(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_ensat   = `PLL_HW__ENSAT(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_0 = `PLL_HW__CLKOD_0(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_1 = `PLL_HW__CLKOD_1(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_2 = `PLL_HW__CLKOD_2(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_3 = `PLL_HW__CLKOD_3(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_4 = `PLL_HW__CLKOD_4(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_5 = `PLL_HW__CLKOD_5(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_6 = `PLL_HW__CLKOD_6(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-        assign pll_hw_clkod_7 = `PLL_HW__CLKOD_7(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_PATH);
-
-        assign pll_hw_bypass[0]    = `PLL_HW__BYPASS0(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_bypass[1]    = `PLL_HW__BYPASS1(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_bypass[2]    = `PLL_HW__BYPASS2(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_bypass[3]    = `PLL_HW__BYPASS3(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_bypass[4]    = `PLL_HW__BYPASS4(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_bypass[5]    = `PLL_HW__BYPASS5(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_bypass[6]    = `PLL_HW__BYPASS6(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_bypass[7]    = `PLL_HW__BYPASS7(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-
-        assign pll_hw_lmmi_dela    = `PLL_HW__DELA(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_delb    = `PLL_HW__DELB(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_delc    = `PLL_HW__DELC(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_deld    = `PLL_HW__DELD(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_dele    = `PLL_HW__DELE(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_delf    = `PLL_HW__DELF(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_delphy  = `PLL_HW__DELPHY(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_delclk7 = `PLL_HW__DELCLK7(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_diva    = `PLL_HW__DIVA(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_divb    = `PLL_HW__DIVB(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_divc    = `PLL_HW__DIVC(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_divd    = `PLL_HW__DIVD(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_dive    = `PLL_HW__DIVE(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_divf    = `PLL_HW__DIVF(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_divphy  = `PLL_HW__DIVPHY(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-        assign pll_hw_lmmi_divclk7 = `PLL_HW__DIVCLK7(`DUT_HIER_PATH.gen_ext_outclkdiv.`DUT_HW_CLKOUT);
-      end // gen_ext_outclkdiv
-    //endgenerate
-
-    initial begin
-      wait(reset_done);
-      repeat (5) @(posedge gsr_clk);
-      // Check if HW parameters are correctly forwarded
-      if(pll_hw_clkr      !== PLL_CLKR    ) begin $display("%t:[ERROR] Parameter mismatch! Expected CLKR     value = %0h : Actual value = %0h",$time, PLL_CLKR,    pll_hw_clkr)      ; param_mismatch = 1; end
-      if(pll_hw_clkf      !== PLL_CLKF    ) begin $display("%t:[ERROR] Parameter mismatch! Expected CLKF     value = %0h : Actual value = %0h",$time, PLL_CLKF,    pll_hw_clkf)      ; param_mismatch = 1; end
-      if(pll_hw_clkv      !== PLL_CLKV    ) begin $display("%t:[ERROR] Parameter mismatch! Expected CLKV     value = %0h : Actual value = %0h",$time, PLL_CLKV,    pll_hw_clkv)      ; param_mismatch = 1; end
-      if(pll_hw_clks      !== PLL_CLKS    ) begin $display("%t:[ERROR] Parameter mismatch! Expected CLKS     value = %0h : Actual value = %0h",$time, PLL_CLKS,    pll_hw_clks)      ; param_mismatch = 1; end
-      // no need to check due to dynamic BW initialization
-      //if(pll_hw_bwadj     !== PLL_BWADJ   ) begin $display("%t:[ERROR] Parameter mismatch! Expected BWADJ    value = %0h : Actual value = %0h",$time, PLL_BWADJ,   pll_hw_bwadj)     ; param_mismatch = 1; end
-      if(pll_hw_ssen      !== PLL_SSEN    ) begin $display("%t:[ERROR] Parameter mismatch! Expected SSEN     value = %0h : Actual value = %0h",$time, PLL_SSEN,    pll_hw_ssen)      ; param_mismatch = 1; end
-      if(pll_hw_dithen    !== PLL_DITHEN  ) begin $display("%t:[ERROR] Parameter mismatch! Expected DITHEN   value = %0h : Actual value = %0h",$time, PLL_DITHEN,  pll_hw_dithen)    ; param_mismatch = 1; end
-      if(pll_hw_intfb     !== PLL_INTFBK  ) begin $display("%t:[ERROR] Parameter mismatch! Expected INTFB    value = %0h : Actual value = %0h",$time, PLL_INTFBK,  pll_hw_intfb)     ; param_mismatch = 1; end
-      if(pll_hw_fasten    !== EN_FAST_LOCK) begin $display("%t:[ERROR] Parameter mismatch! Expected FASTEN   value = %0h : Actual value = %0h",$time, EN_FAST_LOCK,pll_hw_fasten)    ; param_mismatch = 1; end
-      if(pll_hw_ensat     !== PLL_ENSAT   ) begin $display("%t:[ERROR] Parameter mismatch! Expected ENSAT    value = %0h : Actual value = %0h",$time, PLL_ENSAT,   pll_hw_ensat)     ; param_mismatch = 1; end
-      if(pll_hw_bypass[0] !== CLK0_BYP    ) begin $display("%t:[ERROR] Parameter mismatch! Expected BYPASS_0 value = %0h : Actual value = %0h",$time, CLK0_BYP,    pll_hw_bypass[0]) ; param_mismatch = 1; end
-      if(pll_hw_bypass[1] !== CLK1_BYP    ) begin $display("%t:[ERROR] Parameter mismatch! Expected BYPASS_1 value = %0h : Actual value = %0h",$time, CLK1_BYP,    pll_hw_bypass[1]) ; param_mismatch = 1; end
-      if(pll_hw_bypass[2] !== CLK2_BYP    ) begin $display("%t:[ERROR] Parameter mismatch! Expected BYPASS_2 value = %0h : Actual value = %0h",$time, CLK2_BYP,    pll_hw_bypass[2]) ; param_mismatch = 1; end
-      if(pll_hw_bypass[3] !== CLK3_BYP    ) begin $display("%t:[ERROR] Parameter mismatch! Expected BYPASS_3 value = %0h : Actual value = %0h",$time, CLK3_BYP,    pll_hw_bypass[3]) ; param_mismatch = 1; end
-      if(pll_hw_bypass[4] !== CLK4_BYP    ) begin $display("%t:[ERROR] Parameter mismatch! Expected BYPASS_4 value = %0h : Actual value = %0h",$time, CLK4_BYP,    pll_hw_bypass[4]) ; param_mismatch = 1; end
-      if(pll_hw_bypass[5] !== CLK5_BYP    ) begin $display("%t:[ERROR] Parameter mismatch! Expected BYPASS_5 value = %0h : Actual value = %0h",$time, CLK5_BYP,    pll_hw_bypass[5]) ; param_mismatch = 1; end
-      if(pll_hw_bypass[6] !== CLK6_BYP    ) begin $display("%t:[ERROR] Parameter mismatch! Expected BYPASS_6 value = %0h : Actual value = %0h",$time, CLK6_BYP,    pll_hw_bypass[6]) ; param_mismatch = 1; end
-      if(EN_CLK7_OUT) begin
-        if(pll_hw_bypass[7] !== CLK7_BYP  ) begin $display("%t:[ERROR] Parameter mismatch! Expected BYPASS_7 value = %0h : Actual value = %0h",$time, CLK7_BYP,    pll_hw_bypass[7]) ; param_mismatch = 1; end
-      end
-      if(EN_EXT_CLKDIV) begin
-        if(pll_hw_lmmi_diva    !== PLL_CLKOD0) begin $display("%t:[ERROR] Parameter mismatch! Expected DIVA      value = %0h : Actual value = %0h",$time, PLL_CLKOD0,  pll_hw_lmmi_diva   )   ; param_mismatch = 1; end
-        if(pll_hw_lmmi_divb    !== PLL_CLKOD1) begin $display("%t:[ERROR] Parameter mismatch! Expected DIVB      value = %0h : Actual value = %0h",$time, PLL_CLKOD1,  pll_hw_lmmi_divb   )   ; param_mismatch = 1; end
-        if(pll_hw_lmmi_divc    !== PLL_CLKOD2) begin $display("%t:[ERROR] Parameter mismatch! Expected DIVC      value = %0h : Actual value = %0h",$time, PLL_CLKOD2,  pll_hw_lmmi_divc   )   ; param_mismatch = 1; end
-        if(pll_hw_lmmi_divd    !== PLL_CLKOD3) begin $display("%t:[ERROR] Parameter mismatch! Expected DIVD      value = %0h : Actual value = %0h",$time, PLL_CLKOD3,  pll_hw_lmmi_divd   )   ; param_mismatch = 1; end
-        if(pll_hw_lmmi_dive    !== PLL_CLKOD4) begin $display("%t:[ERROR] Parameter mismatch! Expected DIVE      value = %0h : Actual value = %0h",$time, PLL_CLKOD4,  pll_hw_lmmi_dive   )   ; param_mismatch = 1; end
-        if(pll_hw_lmmi_divf    !== PLL_CLKOD5) begin $display("%t:[ERROR] Parameter mismatch! Expected DIVF      value = %0h : Actual value = %0h",$time, PLL_CLKOD5,  pll_hw_lmmi_divf   )   ; param_mismatch = 1; end
-        if(pll_hw_lmmi_divphy  !== PLL_CLKOD6) begin $display("%t:[ERROR] Parameter mismatch! Expected DIVPHY    value = %0h : Actual value = %0h",$time, PLL_CLKOD6,  pll_hw_lmmi_divphy )   ; param_mismatch = 1; end
-        if(EN_CLK7_OUT) begin
-          if(pll_hw_lmmi_divclk7 !== PLL_CLKOD7) begin $display("%t:[ERROR] Parameter mismatch! Expected DIVCLK7   value = %0h : Actual value = %0h",$time, PLL_CLKOD7,  pll_hw_lmmi_divclk7)   ; param_mismatch = 1; end
-        end
-
-        if(pll_hw_lmmi_dela    !== (CLK0_DEL-1)) begin $display("%t:[ERROR] Parameter mismatch! Expected DELA      value = %0h : Actual value = %0h",$time, (CLK0_DEL-1),  pll_hw_lmmi_dela   )   ; param_mismatch = 1; end
-        if(pll_hw_lmmi_delb    !== (CLK1_DEL-1)) begin $display("%t:[ERROR] Parameter mismatch! Expected DELB      value = %0h : Actual value = %0h",$time, (CLK1_DEL-1),  pll_hw_lmmi_delb   )   ; param_mismatch = 1; end
-        if(pll_hw_lmmi_delc    !== (CLK2_DEL-1)) begin $display("%t:[ERROR] Parameter mismatch! Expected DELC      value = %0h : Actual value = %0h",$time, (CLK2_DEL-1),  pll_hw_lmmi_delc   )   ; param_mismatch = 1; end
-        if(pll_hw_lmmi_deld    !== (CLK3_DEL-1)) begin $display("%t:[ERROR] Parameter mismatch! Expected DELD      value = %0h : Actual value = %0h",$time, (CLK3_DEL-1),  pll_hw_lmmi_deld   )   ; param_mismatch = 1; end
-        if(pll_hw_lmmi_dele    !== (CLK4_DEL-1)) begin $display("%t:[ERROR] Parameter mismatch! Expected DELE      value = %0h : Actual value = %0h",$time, (CLK4_DEL-1),  pll_hw_lmmi_dele   )   ; param_mismatch = 1; end
-        if(pll_hw_lmmi_delf    !== (CLK5_DEL-1)) begin $display("%t:[ERROR] Parameter mismatch! Expected DELF      value = %0h : Actual value = %0h",$time, (CLK5_DEL-1),  pll_hw_lmmi_delf   )   ; param_mismatch = 1; end
-        if(pll_hw_lmmi_delphy  !== (CLK6_DEL-1)) begin $display("%t:[ERROR] Parameter mismatch! Expected DELPHY    value = %0h : Actual value = %0h",$time, (CLK6_DEL-1),  pll_hw_lmmi_delphy )   ; param_mismatch = 1; end
-        if(EN_CLK7_OUT) begin
-          if(pll_hw_lmmi_delclk7 !== (CLK7_DEL-1)) begin $display("%t:[ERROR] Parameter mismatch! Expected DELCLK7   value = %0h : Actual value = %0h",$time, (CLK7_DEL-1),  pll_hw_lmmi_delclk7)   ; param_mismatch = 1; end
-        end
-      end
-      else begin
-        if(pll_hw_clkod_0 !== PLL_CLKOD0  ) begin $display("%t:[ERROR] Parameter mismatch! Expected CLKOD0   value = %0h : Actual value = %0h",$time, PLL_CLKOD0,  pll_hw_clkod_0)   ; param_mismatch = 1; end
-        if(pll_hw_clkod_1 !== PLL_CLKOD1  ) begin $display("%t:[ERROR] Parameter mismatch! Expected CLKOD1   value = %0h : Actual value = %0h",$time, PLL_CLKOD1,  pll_hw_clkod_1)   ; param_mismatch = 1; end
-        if(pll_hw_clkod_2 !== PLL_CLKOD2  ) begin $display("%t:[ERROR] Parameter mismatch! Expected CLKOD2   value = %0h : Actual value = %0h",$time, PLL_CLKOD2,  pll_hw_clkod_2)   ; param_mismatch = 1; end
-        if(pll_hw_clkod_3 !== PLL_CLKOD3  ) begin $display("%t:[ERROR] Parameter mismatch! Expected CLKOD3   value = %0h : Actual value = %0h",$time, PLL_CLKOD3,  pll_hw_clkod_3)   ; param_mismatch = 1; end
-        if(pll_hw_clkod_4 !== PLL_CLKOD4  ) begin $display("%t:[ERROR] Parameter mismatch! Expected CLKOD4   value = %0h : Actual value = %0h",$time, PLL_CLKOD4,  pll_hw_clkod_4)   ; param_mismatch = 1; end
-        if(pll_hw_clkod_5 !== PLL_CLKOD5  ) begin $display("%t:[ERROR] Parameter mismatch! Expected CLKOD5   value = %0h : Actual value = %0h",$time, PLL_CLKOD5,  pll_hw_clkod_5)   ; param_mismatch = 1; end
-        if(pll_hw_clkod_6 !== PLL_CLKOD6  ) begin $display("%t:[ERROR] Parameter mismatch! Expected CLKOD6   value = %0h : Actual value = %0h",$time, PLL_CLKOD6,  pll_hw_clkod_6)   ; param_mismatch = 1; end
-        if(EN_CLK7_OUT) begin
-          if(pll_hw_clkod_7 !== PLL_CLKOD7) begin $display("%t:[ERROR] Parameter mismatch! Expected CLKOD7   value = %0h : Actual value = %0h",$time, PLL_CLKOD7,  pll_hw_clkod_7)   ; param_mismatch = 1; end
-        end
-      end
-    end
-  `endif
-`endif
-end // gen_rtl_sim
-else begin : gen_gate_sim
-  `include "dut_inst.v"
-end // gen_gate_sim
-endgenerate
-`endif
-
-
-
-endmodule //--tb_top--
-`endif // __TESTBENCH__TB_TOP__
 
 `ifndef __RTL_MODULE__CLOCK_CHECKER__
 `define __RTL_MODULE__CLOCK_CHECKER__

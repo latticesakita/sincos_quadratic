@@ -7,16 +7,31 @@
 module tb_sin_quadratic;
 
 localparam PHASE_BITS = 47;
-localparam TEST_BITS = 14;
+localparam TEST_BITS = 16;
 
 
-GSRA GSR_INST  (.GSR_N(1'b1));
+GSR GSR_INST  (.GSR_N(1'b1));
     reg clk = 0;
     wire resetn;
     reg [3:0] rst_cnt = 3'b001;
     assign resetn = rst_cnt[3];
     always #5 clk = ~clk;   // 100 MHz
     always @(posedge clk) if(!resetn) rst_cnt<=rst_cnt <<< 1;
+
+reg [31:0] randA;
+reg [31:0] randB;
+wire [63:0] rand = {randA, randB};
+
+always @(posedge clk or negedge resetn) begin
+	if(!resetn) begin
+		randA <= 0;
+		randB <= 0;
+	end
+	else begin
+		randA <= $random;
+		randB <= $random;
+	end
+end
 
     reg                  valid_i;
     reg [PHASE_BITS-1:0] phase;
@@ -70,21 +85,25 @@ GSRA GSR_INST  (.GSR_N(1'b1));
         fd = $fopen("sincos_out.csv", "w");
         $fwrite(fd, "cycle,phase,y_out\n");
     end
+    reg valid_out_d;
     always @(posedge clk or negedge resetn) begin
           if(!resetn) begin
           	cycle <= 0;
           	valid_i <= 0;
           	phase <= 0;
+		valid_out_d <= 0;
           end
-          else if(&phase[PHASE_BITS-1: PHASE_BITS-TEST_BITS]) begin
+	  else if(valid_out_d & (~valid_o)) begin
       		$fclose(fd);
           	valid_i <= 0;
           	$stop;
           end
           else begin
           	cycle <= cycle + 1;
-          	valid_i <= 1;
-          	phase[PHASE_BITS-1: PHASE_BITS-TEST_BITS] <= phase[PHASE_BITS-1: PHASE_BITS-TEST_BITS] + 1;
+		valid_out_d <= valid_o;
+          	valid_i <= ~(&phase[PHASE_BITS-1: PHASE_BITS-TEST_BITS]);
+          	phase[PHASE_BITS-1           : PHASE_BITS-TEST_BITS] <= phase[PHASE_BITS-1: PHASE_BITS-TEST_BITS] + 1;
+		phase[PHASE_BITS-TEST_BITS-1 : 0]                    <= rand[PHASE_BITS-TEST_BITS-1 : 0];
         	if (valid_o) begin
         	    $fwrite(fd, "%0d,%h,%h\n", fifo_idx[fifo_raddr], fifo_phase[fifo_raddr] , y_out);
         	end

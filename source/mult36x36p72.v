@@ -38,15 +38,13 @@
 
 module mult36x36p72
 #(
-	parameter ASIGNED = "SIGNED",
-	parameter BSIGNED = "SIGNED",
-	parameter CSIGNED = "SIGNED",
-	parameter REGINPUTA	=	"BYPASSED", // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
-	parameter REGINPUTB	=	"BYPASSED", // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
-	parameter REGINPUTC	=	"BYPASSED", // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
-	parameter REGPIPE	=	"BYPASSED", // REGISTERED, BYPASSED
-	parameter REGOUTPUT	=	"BYPASSED", // REGISTERED, BYPASSED
-	parameter REGOUTPUT2	=	"BYPASSED"  // REGISTERED, BYPASSED
+	parameter SIGNED = "SIGNED",
+	parameter REGINPUTA	=	"BYPASS", // REGISTER, BYPASS 
+	parameter REGINPUTB	=	"BYPASS", // REGISTER, BYPASS 
+	parameter REGINPUTC	=	"BYPASS", // REGISTER, BYPASS 
+	parameter REGPIPE	=	"BYPASS", // REGISTER, BYPASS
+	parameter REGOUTPUT	=	"BYPASS", // REGISTER, BYPASS
+	parameter REGOUTPUT2	=	"BYPASS" // REGISTER, BYPASS
 )
 (
 	input wire clk,
@@ -54,309 +52,74 @@ module mult36x36p72
 	input wire signed [35:0] A,
 	input wire signed [35:0] B,
 	input wire signed [71:0] C,
-	output reg signed [72:0] result
+	output [72:0] result
 );
 
-wire signed [47:0] result_m0;
-wire signed [47:0] result_m1;
-wire signed [47:0] result_m2;
-wire signed [47:0] result_m3;
-wire [72:0] c_int;
+wire [107:0] c_int;
+wire [107:0] result_m;
+wire         w_signed = (SIGNED == "SIGNED") ? 1'b1 : 1'b0;
 
-assign c_int = (CSIGNED == "SIGNED") ? {C[71],C[71:0]} : {1'b0, C[71:0]};
+assign result = result_m[72:0];
 
-wire [37:0] result_add0; // upper bits of m0+m3, shifted 36bits
-wire [37:0] result_add1; //       bits of m1+m2
-wire [54:0] result_add2; // upper bits of add0+add2, shifted 18bits
 
-addr38 add0 (
-	.data_a_re_i({37'b0,result_m0[36]}),
-	.data_b_re_i({result_m3[36],result_m3[36: 0]}),
-	.result_re_o(result_add0[37:0])
-);
-addr38 add1 (
-	.data_a_re_i({result_m1[36],result_m1[36: 0]}),
-	.data_b_re_i({result_m2[36],result_m2[36: 0]}),
-	.result_re_o(result_add1[37:0])
-);
-addr55 add2 (
-	.data_a_re_i({{18{result_add1[37]}},result_add1[36:0]}),
-	.data_b_re_i({result_add0[36:0],result_m0[35:18]}),
-	.result_re_o(result_add2[54:0])
-);
-generate if(REGOUTPUT2 == "BYPASSED") begin
-	always @(*)
-	begin
-		result[17: 0] = result_m0  [17:0];
-		result[72:18] = result_add2[54:0];
-	end
-end else begin
-	always @(posedge clk or negedge resetn) begin
+generate if(REGPIPE=="REGISTER") begin
+	reg [107:0] c_reg;
+	assign c_int = c_reg;
+	always @(posedge clk or negedge resetn)  begin
 		if(!resetn) begin
-			result[72: 0] <= 73'b0;
+			c_reg <= 108'b0;
 		end
 		else begin
-			result[17: 0] <= result_m0  [17:0];
-			result[72:18] <= result_add2[54:0];
+			c_reg <= (SIGNED == "SIGNED") ? {{(108-72){C[71]}},C[71:0]} : {36'b0, C[71:0]};
 		end
 	end
+end
+else begin
+	assign c_int = (SIGNED == "SIGNED") ? {{(108-72){C[71]}},C[71:0]} : {36'b0, C[71:0]};
 end
 endgenerate
 
 
-
-	MULTADDSUB18X18A #(
-		.ASIGNED		("UNSIGNED"),
-		.BSIGNED		("UNSIGNED"),
+	MULTADDSUB36X36 #(
 		.REGINPUTA		(REGINPUTA),
 		.REGINPUTB		(REGINPUTB),
 		.REGINPUTC		(REGINPUTC),
-		.REGSHIFTOUTA		("BYPASSED"),
-		.REGSHIFTOUTB		("BYPASSED"),
-		.REGSHIFTOUTC		("BYPASSED"),
-		.SHIFTINPUTA		("DISABLED"),
-		.SHIFTINPUTB		("DISABLED"),
-		.SHIFTINPUTC		("DISABLED"),
-		.REGPREPIPE		("BYPASSED"),
-		.REGPIPE		(REGPIPE),
+		.REGADDSUB		("BYPASS"), // REGISTER, BYPASS
+		.REGLOADC2		("BYPASS"), // REGISTER, BYPASS
+		.REGCIN			("BYPASS"),
+		.REGPIPELINE		(REGPIPE),
 		.REGOUTPUT		(REGOUTPUT),
-		.REGCAS_ZOUT		("BYPASSED"),
-		.REGACCUMCONTROLS	("BYPASSED"),
 		.RESETMODE		("ASYNC"),
-		.ACCUM_EN		("ENABLED"), // ("DISABLED"),
-		.CAS_ZOUT_RSHIFT	("DISABLED"),
-		.PREADD_EN		("DISABLED"),
-		.REGADDSUBPRE		("BYPASSED"),
-		.ACCUM_C_EN		("ENABLED"), // ("DISABLED"),
-		.CAS_ZIN_EN		("DISABLED"),// ("ENABLED")
-		.CAS_CIN_EN		("DISABLED"),
-		.ROUNDMODE		("ROUND_TO_ZERO"),
-		.SATURATION		("DISABLED"),
-		.SATURATION_BITS	("48"),
 		.GSR			("ENABLED")
 
 	) mult_m0 (
-		.A			(A[17:0]),
-		.B			(B[17:0]),
-		.C			({30'b0,c_int[17:0]}),
+		.A			(A[35:0]),
+		.B			(B[35:0]),
+		.C			(c_int),
 		.CLK			(clk),
-		.RST			(~resetn),
-		.CEA1			(1'b1),
-		.CEA2			(1'b1),
-		.CEB1			(1'b1),
-		.CEB2			(1'b1),
-		.CEOUTPIPE		(1'b1),
-		.CEC1			(1'b1),
-		.CEC2			(1'b1),
-		.ASHIFTIN		(18'd0),
-		.BSHIFTIN		(18'd0),
-		.CSHIFTIN		(18'd0),
-		.CIN			(1'b0),
-		.CAS_ZIN		(48'd0), // *****
-		.CAS_CIN		(1'b0),
-		.SELC_N			(1'b0),
-		.SELCAS_ZIN_N		(1'b0),
-		.SELCARRY		(1'b0),
-		.ADDSUBPRE		(1'b0),
-		.ADDSUBACCUM		(1'b0),
-		.ASHIFTOUT		(),
-		.BSHIFTOUT		(),
-		.CSHIFTOUT		(),
-		.ZOUT			(result_m0),
-		.COUT			(),
-		.OVERFLOW		(),
-		.CAS_ZOUT		(), // 18bits shifted
-		.CAS_COUT		()
-	);
-	MULTADDSUB18X18A #(
-		.ASIGNED		(ASIGNED),
-		.BSIGNED		("UNSIGNED"),
-		.REGINPUTA		(REGINPUTA),
-		.REGINPUTB		(REGINPUTB),
-		.REGINPUTC		(REGINPUTC),
-		.REGSHIFTOUTA		("BYPASSED"),
-		.REGSHIFTOUTB		("BYPASSED"),
-		.REGSHIFTOUTC		("BYPASSED"),
-		.SHIFTINPUTA		("DISABLED"),
-		.SHIFTINPUTB		("DISABLED"),
-		.SHIFTINPUTC		("DISABLED"),
-		.REGPREPIPE		("BYPASSED"),
-		.REGPIPE		(REGPIPE),
-		.REGOUTPUT		(REGOUTPUT),
-		.REGCAS_ZOUT		("BYPASSED"),
-		.REGACCUMCONTROLS	("BYPASSED"),
-		.RESETMODE		("ASYNC"),
-		.ACCUM_EN		("ENABLED"), // ("DISABLED"),
-		.CAS_ZOUT_RSHIFT	("DISABLED"), // ("DISABLED"),
-		.PREADD_EN		("DISABLED"),
-		.REGADDSUBPRE		("BYPASSED"),
-		.ACCUM_C_EN		("ENABLED"), // ("DISABLED"),
-		.CAS_ZIN_EN		("DISABLED"),// ("ENABLED")
-		.CAS_CIN_EN		("DISABLED"),
-		.ROUNDMODE		("ROUND_TO_ZERO"),
-		.SATURATION		("DISABLED"),
-		.SATURATION_BITS	("48"),
-		.GSR			("ENABLED")
 
-	) mult_m1 (
-		.A			(A[35:18]),
-		.B			(B[17: 0]),
-		.C			(48'd0),
-		.CLK			(clk),
-		.RST			(~resetn),
-		.CEA1			(1'b1),
-		.CEA2			(1'b1),
-		.CEB1			(1'b1),
-		.CEB2			(1'b1),
-		.CEOUTPIPE		(1'b1),
-		.CEC1			(1'b1),
-		.CEC2			(1'b1),
-		.ASHIFTIN		(18'd0),
-		.BSHIFTIN		(18'd0),
-		.CSHIFTIN		(18'd0),
+		.CEA			(1'b1),
+		.CEB			(1'b1),
+		.CEC			(1'b1),
+		.CEPIPE			(1'b1),
+		.CEOUT			(1'b1),
+		.RSTA			(~resetn),
+		.RSTB			(~resetn),
+		.RSTC			(~resetn),
+		.RSTCTRL		(~resetn),
+		.CECTRL			(1'b1),
+		.RSTCIN			(1'b1),
+		.CECIN			(1'b0),
+		.SIGNED			(w_signed), // for all ports
+		.RSTPIPE		(~resetn),
+		.RSTOUT			(~resetn),
+		.LOADC			(1'b1),
+		.ADDSUB			(1'b0),
 		.CIN			(1'b0),
-		.CAS_ZIN		(48'd0), // *****
-		.CAS_CIN		(1'b0),
-		.SELC_N			(1'b0),
-		.SELCAS_ZIN_N		(1'b0),
-		.SELCARRY		(1'b0),
-		.ADDSUBPRE		(1'b0),
-		.ADDSUBACCUM		(1'b0),
-		.ASHIFTOUT		(),
-		.BSHIFTOUT		(),
-		.CSHIFTOUT		(),
-		.ZOUT			(result_m1),
-		.COUT			(),
-		.OVERFLOW		(),
-		.CAS_ZOUT		(), // No Shift
-		.CAS_COUT		()
-	);
-	MULTADDSUB18X18A #(
-		.ASIGNED		("UNSIGNED"),
-		.BSIGNED		(BSIGNED),
-		.REGINPUTA		(REGINPUTA),
-		.REGINPUTB		(REGINPUTB),
-		.REGINPUTC		(REGINPUTC),
-		.REGSHIFTOUTA		("BYPASSED"),
-		.REGSHIFTOUTB		("BYPASSED"),
-		.REGSHIFTOUTC		("BYPASSED"),
-		.SHIFTINPUTA		("DISABLED"),
-		.SHIFTINPUTB		("DISABLED"),
-		.SHIFTINPUTC		("DISABLED"),
-		.REGPREPIPE		("BYPASSED"),
-		.REGPIPE		(REGPIPE),
-		.REGOUTPUT		(REGOUTPUT),
-		.REGCAS_ZOUT		("BYPASSED"),
-		.REGACCUMCONTROLS	("BYPASSED"),
-		.RESETMODE		("ASYNC"),
-		.ACCUM_EN		("ENABLED"), // ("DISABLED"),
-		.CAS_ZOUT_RSHIFT	("DISABLED"),
-		.PREADD_EN		("DISABLED"),
-		.REGADDSUBPRE		("BYPASSED"),
-		.ACCUM_C_EN		("ENABLED"), // ("DISABLED"),
-		.CAS_ZIN_EN		("DISABLED"),// ("ENABLED")
-		.CAS_CIN_EN		("DISABLED"),
-		.ROUNDMODE		("ROUND_TO_ZERO"),
-		.SATURATION		("DISABLED"),
-		.SATURATION_BITS	("48"),
-		.GSR			("ENABLED")
 
-	) mult_m2 (
-		.A			(A[17: 0]),
-		.B			(B[35:18]),
-		.C			({30'b0,c_int[35:18]}),
-		.CLK			(clk),
-		.RST			(~resetn),
-		.CEA1			(1'b1),
-		.CEA2			(1'b1),
-		.CEB1			(1'b1),
-		.CEB2			(1'b1),
-		.CEOUTPIPE		(1'b1),
-		.CEC1			(1'b1),
-		.CEC2			(1'b1),
-		.ASHIFTIN		(18'd0),
-		.BSHIFTIN		(18'd0),
-		.CSHIFTIN		(18'd0),
-		.CIN			(1'b0),
-		.CAS_ZIN		(48'd0), // *****
-		.CAS_CIN		(1'b0),
-		.SELC_N			(1'b0),
-		.SELCAS_ZIN_N		(1'b0),
-		.SELCARRY		(1'b0),
-		.ADDSUBPRE		(1'b0),
-		.ADDSUBACCUM		(1'b0),
-		.ASHIFTOUT		(),
-		.BSHIFTOUT		(),
-		.CSHIFTOUT		(),
-		.ZOUT			(result_m2), // *****
-		.COUT			(),
-		.OVERFLOW		(),
-		.CAS_ZOUT		(), // 18bits shifted
-		.CAS_COUT		()
-	);
-	MULTADDSUB18X18A #(
-		.ASIGNED		(ASIGNED),
-		.BSIGNED		(BSIGNED),
-		.REGINPUTA		(REGINPUTA),
-		.REGINPUTB		(REGINPUTB),
-		.REGINPUTC		(REGINPUTC),
-		.REGSHIFTOUTA		("BYPASSED"),
-		.REGSHIFTOUTB		("BYPASSED"),
-		.REGSHIFTOUTC		("BYPASSED"),
-		.SHIFTINPUTA		("DISABLED"),
-		.SHIFTINPUTB		("DISABLED"),
-		.SHIFTINPUTC		("DISABLED"),
-		.REGPREPIPE		("BYPASSED"),
-		.REGPIPE		(REGPIPE),
-		.REGOUTPUT		(REGOUTPUT),
-		.REGCAS_ZOUT		("BYPASSED"),
-		.REGACCUMCONTROLS	("BYPASSED"),
-		.RESETMODE		("ASYNC"),
-		.ACCUM_EN		("ENABLED"), // ("DISABLED"),
-		.CAS_ZOUT_RSHIFT	("DISABLED"),
-		.PREADD_EN		("DISABLED"),
-		.REGADDSUBPRE		("BYPASSED"),
-		.ACCUM_C_EN		("ENABLED"), // ("DISABLED"),
-		.CAS_ZIN_EN		("DISABLED"),// ("ENABLED")
-		.CAS_CIN_EN		("DISABLED"),
-		.ROUNDMODE		("ROUND_TO_ZERO"),
-		.SATURATION		("DISABLED"),
-		.SATURATION_BITS	("48"),
-		.GSR			("ENABLED")
-
-	) mult_m3 (
-		.A			(A[35:18]),
-		.B			(B[35:18]),
-		.C			({11'b0,c_int[72:36]}),
-		.CLK			(clk),
-		.RST			(~resetn),
-		.CEA1			(1'b1),
-		.CEA2			(1'b1),
-		.CEB1			(1'b1),
-		.CEB2			(1'b1),
-		.CEOUTPIPE		(1'b1),
-		.CEC1			(1'b1),
-		.CEC2			(1'b1),
-		.ASHIFTIN		(18'd0),
-		.BSHIFTIN		(18'd0),
-		.CSHIFTIN		(18'd0),
-		.CIN			(1'b0),
-		.CAS_ZIN		(48'd0), // *****
-		.CAS_CIN		(1'b0),
-		.SELC_N			(1'b0),
-		.SELCAS_ZIN_N		(1'b0),
-		.SELCARRY		(1'b0),
-		.ADDSUBPRE		(1'b0),
-		.ADDSUBACCUM		(1'b0),
-		.ASHIFTOUT		(),
-		.BSHIFTOUT		(),
-		.CSHIFTOUT		(),
-		.ZOUT			(result_m3), // *****
-		.COUT			(),
-		.OVERFLOW		(),
-		.CAS_ZOUT		(),
-		.CAS_COUT		()
+		.Z			(result_m)
 	);
 
 endmodule
+
 

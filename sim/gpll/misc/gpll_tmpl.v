@@ -1,4 +1,4 @@
-    gpll __(.rstn_i( ),
-        .clki_i( ),
-        .lock_o( ),
-        .clkop_o( ));
+    gpll __(.clki_i( ),
+        .rstn_i( ),
+        .clkop_o( ),
+        .lock_o( ));

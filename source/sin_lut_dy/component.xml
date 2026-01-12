@@ -126,20 +126,20 @@
     <ipxact:vendorExtensions>
         <lsccip:moduleRef lsccip:display_name="ROM" lsccip:display_vendor="latticesemi.com" lsccip:library="module" lsccip:name="rom" lsccip:vendor="latticesemi.com" lsccip:version="2.5.0"/>
         <lsccip:deviceInfo>
-            <lsccip:device>LN2-CT-20ES</lsccip:device>
-            <lsccip:device_int>ak6a160b</lsccip:device_int>
-            <lsccip:package>ASG410</lsccip:package>
-            <lsccip:package_int>ASG410</lsccip:package_int>
-            <lsccip:performanceGrade>1</lsccip:performanceGrade>
-            <lsccip:speed_int>1</lsccip:speed_int>
+            <lsccip:device>LFCPNX-100</lsccip:device>
+            <lsccip:device_int>jd5d80</lsccip:device_int>
+            <lsccip:package>CBG256</lsccip:package>
+            <lsccip:package_int>CBG256</lsccip:package_int>
+            <lsccip:performanceGrade>7_High-Performance_1.0V</lsccip:performanceGrade>
+            <lsccip:speed_int>10</lsccip:speed_int>
             <lsccip:operation>Commercial</lsccip:operation>
-            <lsccip:family>LAV-AT</lsccip:family>
-            <lsccip:architecture>ap6a00b</lsccip:architecture>
-            <lsccip:partnumber/>
+            <lsccip:family>LFCPNX</lsccip:family>
+            <lsccip:architecture>jd5d00</lsccip:architecture>
+            <lsccip:partnumber>LFCPNX-100-7CBG256C</lsccip:partnumber>
         </lsccip:deviceInfo>
         <lsccip:generationInfo>
             <lsccip:fileVersion>20180929</lsccip:fileVersion>
-            <lsccip:createdTimestamp>2026 01 08 09:57:53</lsccip:createdTimestamp>
+            <lsccip:createdTimestamp>2026 01 08 15:16:32</lsccip:createdTimestamp>
             <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2025.2.0.48.0</lsccip:radiantBuild>
         </lsccip:generationInfo>
     </ipxact:vendorExtensions>

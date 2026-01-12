@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<userSetting name="/home/kanmei/src/sincos_quadratic/project/promote.xml" version="Diamond (64-bit) 2025.2.0.48.0" date="木  1月 08 10時38分49秒 2026" vendor="Lattice Semiconductor Corporation" >
-  <msg mid="2012925" type="Error" internal="true" />
-  <msg mid="35901209" type="Warning" internal="true" />
+<userSetting name="/home/kanmei/src/sincos_quadratic/project/promote.xml" version="Diamond (64-bit) 2025.2.0.48.0" date="火  1月 13 07時41分47秒 2026" vendor="Lattice Semiconductor Corporation" >
+  <msg mid="35901556" type="Warning" internal="true" />
+  <msg mid="35901172" type="Warning" internal="true" />
+  <msg mid="35901184" type="Warning" internal="true" />
+  <msg mid="35901195" type="Warning" internal="true" />
+  <msg mid="35901128" type="Warning" internal="true" />
+  <msg mid="35901137" type="Warning" internal="true" />
   <msg mid="35911015" type="Info" internal="true" />
   <msg mid="35911012" type="Info" internal="true" />
+  <msg mid="35901209" type="Warning" internal="true" />
+  <msg mid="35911026" type="Warning" internal="true" />
+  <msg mid="35911000" type="Warning" internal="true" />
+  <msg mid="35911001" type="Warning" internal="true" />
   <msg mid="35901328" type="Info" internal="true" />
   <msg mid="35931002" type="Warning" internal="true" />
-  <msg mid="35901137" type="Warning" internal="true" />
+  <msg mid="2012925" type="Error" internal="true" />
 </userSetting>

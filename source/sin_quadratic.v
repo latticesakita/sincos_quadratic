@@ -73,7 +73,8 @@ module sin_quadratic
     // -------------------------------------------------
     // pipeline stage 1,2 : LUT read, t,tt calc
     // -------------------------------------------------
-    reg [FRAC_BITS:0] t1     ; // = {1'b0, frac};
+    reg [FRAC_BITS:0] t1    ;
+    reg [FRAC_BITS:0] t2    ;
     reg [FRAC_BITS:0] t     ; // = {1'b0, frac};
     //wire signed [FRAC_BITS:0] t_m1  = {1'b1, frac};
 
@@ -82,13 +83,12 @@ module sin_quadratic
     wire [35:0] tt = tt_full[2*FRAC_BITS : 2*FRAC_BITS - 35];
 
     mult36x36p72 #(
-        .ASIGNED("SIGNED"),
-        .BSIGNED("SIGNED"),
-	.REGINPUTA("REGISTERED_ONCE"), // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
-	.REGINPUTB("REGISTERED_ONCE"), // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
-	.REGINPUTC("REGISTERED_ONCE"), // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
-        //.REGPIPE     ("REGISTERED"),// REGISTERED, BYPASSED
-        .REGOUTPUT   ("REGISTERED") // REGISTERED, BYPASSED
+        .SIGNED("SIGNED"),
+	.REGINPUTA("REGISTER"), // REGISTER, BYPASS 
+	.REGINPUTB("REGISTER"), // REGISTER, BYPASS 
+	.REGINPUTC("REGISTER"), // REGISTER, BYPASS 
+        //.REGPIPE     ("REGISTER"),// REGISTER, BYPASS
+        .REGOUTPUT   ("REGISTER") // REGISTER, BYPASS
     )  mult_tt_full (
         .clk(clk),
         .resetn(resetn),
@@ -101,9 +101,11 @@ module sin_quadratic
     always @(posedge clk or negedge resetn) begin
         if (!resetn) begin
             t1 <= 0;
+            t2 <= 0;
             t  <= 0;
         end else begin
             t1        <= {1'b0, frac};
+            t2        <= t1;
             t         <= t1;
         end
     end
@@ -118,14 +120,12 @@ module sin_quadratic
     wire signed [71:0] term1; // = dy_s  * t + y0_s;
     wire signed [71:0] term2; // = ddy_s * tt;
     mult36x36p72 #(
-        .ASIGNED("UNSIGNED"),
-        .BSIGNED("UNSIGNED"),
-        .CSIGNED("UNSIGNED"),
-	.REGINPUTA("REGISTERED_ONCE"), // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
-	.REGINPUTB("REGISTERED_ONCE"), // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
-	.REGINPUTC("REGISTERED_ONCE"), // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
-	//.REGPIPE("REGISTERED"),
-	.REGOUTPUT ("REGISTERED")
+        .SIGNED("UNSIGNED"),
+	.REGINPUTA("REGISTER"), // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
+	.REGINPUTB("REGISTER"), // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
+	.REGINPUTC("REGISTER"), // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
+	//.REGPIPE("REGISTER"),
+	.REGOUTPUT ("REGISTER")
     ) mult_term1 (
         .clk(clk),
         .resetn(resetn),
@@ -135,13 +135,12 @@ module sin_quadratic
         .result(term1)
     );
     mult36x36p72 #(
-        .ASIGNED("SIGNED"),
-        .BSIGNED("SIGNED"),
-	.REGINPUTA("REGISTERED_ONCE"), // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
-	.REGINPUTB("REGISTERED_ONCE"), // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
-	.REGINPUTC("REGISTERED_ONCE"), // REGISTERED_ONCE, REGISTERED_TWICE, BYPASSED 
-	//.REGPIPE  ("REGISTERED"),
-	.REGOUTPUT ("REGISTERED")
+        .SIGNED("SIGNED"),
+	.REGINPUTA("REGISTER"), // REGISTER, BYPASS
+	.REGINPUTB("REGISTER"), // REGISTER, BYPASS
+	.REGINPUTC("REGISTER"), // REGISTER, BYPASS
+	//.REGPIPE  ("REGISTER"),
+	.REGOUTPUT ("REGISTER")
     ) mult_term2 (
         .clk(clk),
         .resetn(resetn),

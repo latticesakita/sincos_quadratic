@@ -1,4 +1,4 @@
-    gpll u_gpll(.rstn_i(rstn_i),
-        .clki_i(clki_i),
-        .lock_o(lock_o),
-        .clkop_o(clkop_o));
+    gpll u_gpll(.clki_i(clki_i),
+        .rstn_i(rstn_i),
+        .clkop_o(clkop_o),
+        .lock_o(lock_o));
